@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30503.244
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactiveMarbles.ObservableEvents.Test", "ReactiveMarbles.ObservableEvents.Tests\ReactiveMarbles.ObservableEvents.Test.csproj", "{2AF6CBC6-6EE4-4C99-B769-2A777DE6ADFC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactiveMarbles.ObservableEvents.SourceGenerator", "ReactiveMarbles.ObservableEvents.SourceGenerator\ReactiveMarbles.ObservableEvents.SourceGenerator.csproj", "{611C5578-EBDB-4B10-81D1-E7CBEC52D8FB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2AF6CBC6-6EE4-4C99-B769-2A777DE6ADFC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2AF6CBC6-6EE4-4C99-B769-2A777DE6ADFC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2AF6CBC6-6EE4-4C99-B769-2A777DE6ADFC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2AF6CBC6-6EE4-4C99-B769-2A777DE6ADFC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{611C5578-EBDB-4B10-81D1-E7CBEC52D8FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{611C5578-EBDB-4B10-81D1-E7CBEC52D8FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{611C5578-EBDB-4B10-81D1-E7CBEC52D8FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{611C5578-EBDB-4B10-81D1-E7CBEC52D8FB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {75F2884C-2610-41ED-84E3-191D764376EE}
+	EndGlobalSection
+EndGlobal

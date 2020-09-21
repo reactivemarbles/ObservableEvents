@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>preview</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Reactive" Version="4.4.1" />
+    <PackageReference Include="xamarin.forms" Version="4.8.0.1451" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ReactiveMarbles.ObservableEvents.SourceGenerator\ReactiveMarbles.ObservableEvents.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <Target Name="RemoveSourceGeneratedFiles" BeforeTargets="CoreCompile">
+    <ItemGroup>
+      <Compile Remove="**/*.SourceGenerated.cs" />
+    </ItemGroup>
+  </Target>
+</Project>

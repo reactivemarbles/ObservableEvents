@@ -1,0 +1,13 @@
+﻿# Default ignored files
+/shelf/
+/workspace.xml
+# Rider ignored files
+/contentModel.xml
+/projectSettingsUpdater.xml
+/modules.xml
+/.idea.ReactiveMarbles.ObservableEvents.iml
+# Datasource local storage ignored files
+/../../../../../../../:\source\reactivemarbles\ReactiveMarbles.ObservableEvents\.idea\.idea.ReactiveMarbles.ObservableEvents\.idea/dataSources/
+/dataSources.local.xml
+# Editor-based HTTP Client requests
+/httpRequests/
