@@ -16,7 +16,7 @@
 
   <Target Name="RemoveSourceGeneratedFiles" BeforeTargets="CoreCompile">
     <ItemGroup>
-      <Compile Remove="**/*.SourceGenerated.Designer.cs" />
+      <Compile Remove="**/*.SourceGenerated.cs" />
     </ItemGroup>
   </Target>
 </Project>
