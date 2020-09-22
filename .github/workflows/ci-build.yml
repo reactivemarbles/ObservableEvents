@@ -1,0 +1,72 @@
+name: .NET Core Desktop
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  configuration: Release
+  productNamespacePrefix: "DynamicData"
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Install .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.x
+
+    - name: Install Latest NuGet
+      uses: nuget/setup-nuget@v1
+      with:
+        nuget-api-key: ${{ secrets.NuGetAPIKey }}
+        nuget-version: '5.x'
+
+    - name: NBGV
+      uses: dotnet/nbgv@master
+      with:
+        setAllVars: true
+
+    - name: Restore NuGet Packages
+      run: dotnet restore
+      working-directory: src
+
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v1.0.1
+
+    - name: Build
+      run: msbuild /t:build,pack /maxcpucount /p:NoPackageAnalysis=true /verbosity:minimal /p:Configuration=${{ env.configuration }}
+      working-directory: src
+
+    - name: Install Report Generator
+      run: dotnet tool install --global dotnet-reportgenerator-globaltool
+
+    - name: Run Unit Tests
+      run: dotnet test --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput="../../artifacts/coverage/coverage.xml" /p:Include="[${{ env.productNamespacePrefix}}*]*" /p:Exclude="[${{ env.productNamespacePrefix}}*Tests.*]*"
+      working-directory: src
+
+    - name: Generate Coverage Report
+      run: reportgenerator -reports:"coverage.*.xml" -targetdir:report-output
+      working-directory: artifacts/coverage
+
+    - name: Generate Coverage Artifacts
+      uses: actions/upload-artifact@master
+      with:
+        name: Coverage
+        path: artifacts/coverage/report-output
+
+    - name: Upload Code Coverage
+      uses: codecov/codecov-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+        directory: artifacts/coverage
