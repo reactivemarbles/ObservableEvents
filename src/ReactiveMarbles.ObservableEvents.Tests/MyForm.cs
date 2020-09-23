@@ -11,8 +11,6 @@ using ReactiveMarbles.ObservableEvents;
 
 using Xamarin.Forms;
 
-[assembly: TypeEventsToObservables(typeof(Page))]
-
 namespace ReactiveMarbles.ObservableEvents
 {
     /// <summary>
