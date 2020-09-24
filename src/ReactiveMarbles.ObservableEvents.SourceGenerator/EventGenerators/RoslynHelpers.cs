@@ -2,6 +2,7 @@
 // ReactiveUI Association Inc licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System;
 using System.Linq;
 
 using Microsoft.CodeAnalysis;
@@ -18,11 +19,13 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators
         internal const string ObservableUnitName = "global::System.Reactive.Unit";
         internal const string VoidType = "System.Void";
 
+        public static SymbolDisplayFormat SymbolDisplayFormat { get; } = new SymbolDisplayFormat(typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces, genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters | SymbolDisplayGenericsOptions.IncludeTypeConstraints | SymbolDisplayGenericsOptions.IncludeVariance);
+
         /// <summary>
         /// Gets an argument which access System.Reactive.Unit.Default member.
         /// </summary>
         public static ArgumentListSyntax ReactiveUnitArgumentList { get; } = SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(SyntaxFactory.Argument(SyntaxFactory.IdentifierName(ObservableUnitName + ".Default"))));
 
-        public static bool HasEvents(INamedTypeSymbol? symbol) => symbol?.GetMembers().OfType<IEventSymbol>().Where(x => x.DeclaredAccessibility == Accessibility.Public).Any() ?? false;
+        public static Func<INamedTypeSymbol, bool> HasEvents { get; } = symbol => symbol.GetMembers().OfType<IEventSymbol>().Any(x => x.DeclaredAccessibility == Accessibility.Public);
     }
 }

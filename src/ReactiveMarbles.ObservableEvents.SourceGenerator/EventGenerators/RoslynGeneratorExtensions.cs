@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 
@@ -17,8 +18,6 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators
 {
     internal static class RoslynGeneratorExtensions
     {
-        private static SymbolDisplayFormat _symbolDisplayFormat = new SymbolDisplayFormat(typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces);
-
         /// <summary>
         /// Generates a argument list for a single parameter.
         /// </summary>
@@ -59,46 +58,44 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators
             return argumentList;
         }
 
-        public static List<TypeEvents> GetOrderedTypeEvents(this IReadOnlyList<INamedTypeSymbol> namedTypes)
+        public static IEnumerable<T> GetMembers<T>(this INamedTypeSymbol symbol)
+            where T : ISymbol
         {
-            var orderedTypeDeclarations = new List<TypeEvents>(namedTypes.Count);
-            for (int i = 0; i < namedTypes.Count; ++i)
+            var members = symbol.GetMembers();
+            for (int i = 0; i < members.Length; ++i)
             {
-                var namedType = namedTypes[i];
+                var member = members[i];
 
-                var members = namedType.GetMembers();
-                var events = new List<IEventSymbol>(members.Length);
-
-                for (int memberIndex = 0; memberIndex < members.Length; memberIndex++)
-                {
-                    var member = members[memberIndex];
-
-                    if (member is IEventSymbol eventSymbol && eventSymbol.DeclaredAccessibility == Accessibility.Public)
-                    {
-                        var eventIndex = events.BinarySearch(eventSymbol, EventNameComparer.Default);
-
-                        if (eventIndex < 0)
-                        {
-                            events.Insert(~eventIndex, eventSymbol);
-                        }
-                    }
-                }
-
-                if (events.Count == 0)
+                if (member is not T eventSymbol)
                 {
                     continue;
                 }
 
-                var element = new TypeEvents(namedType, events);
-                var index = orderedTypeDeclarations.BinarySearch(element, TypeEventsComparer.Default);
+                yield return eventSymbol;
+            }
+        }
 
-                if (index < 0)
+        public static IReadOnlyList<IEventSymbol> GetEvents(this INamedTypeSymbol namedType)
+        {
+            var members = namedType.GetMembers();
+            var events = new List<IEventSymbol>(members.Length);
+
+            for (int memberIndex = 0; memberIndex < members.Length; memberIndex++)
+            {
+                var member = members[memberIndex];
+
+                if (member is IEventSymbol eventSymbol && eventSymbol.DeclaredAccessibility == Accessibility.Public)
                 {
-                    orderedTypeDeclarations.Insert(~index, element);
+                    var eventIndex = events.BinarySearch(eventSymbol, EventNameComparer.Default);
+
+                    if (eventIndex < 0)
+                    {
+                        events.Insert(~eventIndex, eventSymbol);
+                    }
                 }
             }
 
-            return orderedTypeDeclarations;
+            return events;
         }
 
         public static TypeSyntax GenerateObservableType(this TypeArgumentListSyntax argumentList)
@@ -192,21 +189,13 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators
         /// <returns>A type descriptor including the generic arguments.</returns>
         public static string GenerateFullGenericName(this ITypeSymbol currentType)
         {
-            var (isBuiltIn, typeName) = GetBuiltInType(currentType.ToDisplayString(_symbolDisplayFormat));
+            var (isBuiltIn, typeName) = GetBuiltInType(currentType.ToDisplayString(RoslynHelpers.SymbolDisplayFormat));
             var sb = new StringBuilder(!isBuiltIn ? "global::" + typeName : typeName);
 
             return sb.ToString();
-            ////if (currentType is INamedTypeSymbol namedSymbol && namedSymbol.TypeArguments.Length > 0)
-            ////{
-            ////    sb.Append('<')
-            ////        .Append(string.Join(", ", namedSymbol.TypeArguments.Select(GenerateFullGenericName)))
-            ////        .Append('>');
-            ////}
-
-            ////return sb.ToString();
         }
 
-        public static IEnumerable<INamedTypeSymbol>? GetBasesWithCondition(this INamedTypeSymbol symbol, Func<INamedTypeSymbol, bool> condition)
+        public static IEnumerable<INamedTypeSymbol> GetBasesWithCondition(this INamedTypeSymbol symbol, Func<INamedTypeSymbol, bool> condition)
         {
             INamedTypeSymbol? current = symbol.BaseType;
 

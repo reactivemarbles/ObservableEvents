@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 using Microsoft.CodeAnalysis;
@@ -12,15 +13,15 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators
 {
     internal struct TypeEvents : IComparable<TypeEvents>
     {
-        public TypeEvents(INamedTypeSymbol type, List<IEventSymbol> events)
+        public TypeEvents(INamedTypeSymbol type, IEnumerable<IEventSymbol> events)
         {
             Type = type;
-            Events = events;
+            Events = events.ToArray();
         }
 
         public INamedTypeSymbol Type { get; }
 
-        public List<IEventSymbol> Events { get; }
+        public IReadOnlyList<IEventSymbol> Events { get; }
 
         public int CompareTo(TypeEvents other)
         {

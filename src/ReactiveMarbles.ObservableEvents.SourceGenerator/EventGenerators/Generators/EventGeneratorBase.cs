@@ -20,7 +20,7 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators.Gener
     internal abstract class EventGeneratorBase : IEventSymbolGenerator
     {
         /// <inheritdoc />
-        public abstract NamespaceDeclarationSyntax? Generate(string namespaceName, IReadOnlyList<INamedTypeSymbol> namedTypes);
+        public abstract NamespaceDeclarationSyntax? Generate(INamedTypeSymbol item, bool generateEmpty);
 
         /// <summary>
         /// Generates an observable declaration that wraps a event.
@@ -29,7 +29,7 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators.Gener
         /// <param name="dataObjectName">The name of the item where the event is stored.</param>
         /// <param name="prefix">A prefix to append to the name.</param>
         /// <returns>The property declaration.</returns>
-        protected static PropertyDeclarationSyntax? GenerateEventWrapperObservable(IEventSymbol eventDetails, string dataObjectName, string? prefix = null)
+        protected static PropertyDeclarationSyntax? GenerateEventWrapperObservable(IEventSymbol eventDetails, string dataObjectName, string? prefix)
         {
             prefix ??= string.Empty;
 

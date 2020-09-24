@@ -17,9 +17,9 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators.Gener
         /// <summary>
         /// Generates a compilation unit based on generating event observable wrappers.
         /// </summary>
-        /// <param name="namespaceName">The name of the namespace.</param>
-        /// <param name="namedTypes">The symbols to generate for.</param>
+        /// <param name="item">The symbol to generate for.</param>
+        /// <param name="generateEmpty">If this symbol should generate a empty shell regardless if it has events. Eg for inheritance.</param>
         /// <returns>The new compilation unit.</returns>
-        NamespaceDeclarationSyntax? Generate(string namespaceName, IReadOnlyList<INamedTypeSymbol> namedTypes);
+        NamespaceDeclarationSyntax? Generate(INamedTypeSymbol item, bool generateEmpty);
     }
 }

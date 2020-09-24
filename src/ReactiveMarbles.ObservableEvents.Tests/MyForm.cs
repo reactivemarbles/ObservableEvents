@@ -11,12 +11,12 @@ using ReactiveMarbles.ObservableEvents;
 
 using Xamarin.Forms;
 
+#pragma warning disable
 namespace ReactiveMarbles.ObservableEvents
 {
     /// <summary>
     /// Code behind for the same page.
     /// </summary>
-    [TypeEventsToObservables]
     public partial class MyForm : Page
     {
         /// <summary>
@@ -24,7 +24,15 @@ namespace ReactiveMarbles.ObservableEvents
         /// </summary>
         public void Test()
         {
-            this.Events().PropertyChanged.Subscribe(x => Console.WriteLine(x));
+            var events = this.Events().PropertyChanged.Subscribe();
+        }
+    }
+
+    public class MyNoEventsClass
+    {
+        public MyNoEventsClass()
+        {
+            this.Events();
         }
     }
 }
