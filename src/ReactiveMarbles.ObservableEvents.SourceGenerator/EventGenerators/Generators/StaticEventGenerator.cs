@@ -23,7 +23,7 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators.Gener
 
             var namespaceName = item.ContainingNamespace.ToDisplayString(RoslynHelpers.SymbolDisplayFormat);
 
-            foreach (var eventDetail in item.GetMembers<IEventSymbol>())
+            foreach (var eventDetail in item.GetEvents())
             {
                 var eventWrapper = GenerateEventWrapperObservable(eventDetail, item.GenerateFullGenericName(), item.Name);
 
@@ -35,8 +35,8 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators.Gener
 
             if (eventWrapperMembers.Count > 0)
             {
-                var members = ClassDeclaration("Events")
-                    .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.StaticKeyword)))
+                var members = ClassDeclaration("RxEvents")
+                    .WithModifiers(TokenList(Token(SyntaxKind.InternalKeyword), Token(SyntaxKind.StaticKeyword)))
                     .WithLeadingTrivia(XmlSyntaxFactory.GenerateSummarySeeAlsoComment("A class that contains extension methods to wrap events contained within static classes within the {0} namespace.", namespaceName))
                     .WithMembers(List<MemberDeclarationSyntax>(eventWrapperMembers.Where(x => x != null).Select(x => x!)));
 

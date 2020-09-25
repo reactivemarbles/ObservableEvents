@@ -181,23 +181,13 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators
         }
 
         /// <summary>
-        /// Converts the type into a format that can be used in XML documentation.
-        /// </summary>
-        /// <param name="currentType">The type to convert.</param>
-        /// <returns>A XML friendly version of the type.</returns>
-        public static string ConvertToDocument(this ITypeSymbol currentType)
-        {
-            return currentType.GenerateFullGenericName().Replace("<", "{").Replace(">", "}");
-        }
-
-        /// <summary>
         /// Converts the method into a format that can be used in XML documentation.
         /// </summary>
         /// <param name="method">The method to convert.</param>
         /// <returns>A XML friendly version of the method.</returns>
         public static string ConvertToDocument(this IMethodSymbol method)
         {
-            var stringBuilder = new StringBuilder(method.ContainingType.ConvertToDocument() + "." + method.Name).Append('(');
+            var stringBuilder = new StringBuilder(method.ContainingType.GetArityDisplayName() + "." + method.Name).Append('(');
 
             for (var i = 0; i < method.Parameters.Length; ++i)
             {
@@ -208,7 +198,7 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators
                     stringBuilder.Append(", ");
                 }
 
-                stringBuilder.Append(parameter.Type.ConvertToDocument());
+                stringBuilder.Append(parameter.Type.GetArityDisplayName());
             }
 
             stringBuilder.Append(')');
@@ -223,7 +213,7 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators
         /// <returns>A XML friendly version of the event.</returns>
         public static string ConvertToDocument(this IEventSymbol eventDetails)
         {
-            return eventDetails.Type.ConvertToDocument() + "." + eventDetails.Name;
+            return eventDetails.ContainingType.GetArityDisplayName() + "." + eventDetails.Name;
         }
     }
 }

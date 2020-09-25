@@ -61,7 +61,7 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators.Gener
                     .WithModifiers(modifiers)
                     .WithMembers(List(GenerateObservableMembers(methods)))
                     .WithBaseList(BaseList(SingletonSeparatedList<BaseTypeSyntax>(SimpleBaseType(IdentifierName(typeDefinition.GenerateFullGenericName())))))
-                    .WithLeadingTrivia(XmlSyntaxFactory.GenerateSummarySeeAlsoComment("Wraps delegates events from {0} into Observables.", typeDefinition.ConvertToDocument()))
+                    .WithLeadingTrivia(XmlSyntaxFactory.GenerateSummarySeeAlsoComment("Wraps delegates events from {0} into Observables.", typeDefinition.GetArityDisplayName()))
                     .WithObsoleteAttribute(typeDefinition);
         }
 

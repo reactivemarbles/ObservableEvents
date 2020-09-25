@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
@@ -75,10 +76,9 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators
             }
         }
 
-        public static IReadOnlyList<IEventSymbol> GetEvents(this INamedTypeSymbol namedType)
+        public static IEnumerable<IEventSymbol> GetEvents(this INamedTypeSymbol namedType)
         {
             var members = namedType.GetMembers();
-            var events = new List<IEventSymbol>(members.Length);
 
             for (int memberIndex = 0; memberIndex < members.Length; memberIndex++)
             {
@@ -86,16 +86,9 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators
 
                 if (member is IEventSymbol eventSymbol && eventSymbol.DeclaredAccessibility == Accessibility.Public)
                 {
-                    var eventIndex = events.BinarySearch(eventSymbol, EventNameComparer.Default);
-
-                    if (eventIndex < 0)
-                    {
-                        events.Insert(~eventIndex, eventSymbol);
-                    }
+                    yield return eventSymbol;
                 }
             }
-
-            return events;
         }
 
         public static TypeSyntax GenerateObservableType(this TypeArgumentListSyntax argumentList)
@@ -158,13 +151,14 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators
                             .WithType(IdentifierName(x.Type.GenerateFullGenericName())))));
         }
 
-        public static IEnumerable<INamedTypeSymbol> GetBaseTypesAndThis(this INamedTypeSymbol type)
+        public static IEnumerable<T> GetBaseTypesAndThis<T>(this T type)
+            where T : ITypeSymbol
         {
             var current = type;
             while (current != null)
             {
                 yield return current;
-                current = current.BaseType;
+                current = (T)current.BaseType;
             }
         }
 
@@ -210,6 +204,47 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators
             }
         }
 
+        public static string GetArityDisplayName(this ITypeSymbol namedTypeSymbol)
+        {
+            var items = new Stack<ITypeSymbol>();
+
+            ITypeSymbol current = namedTypeSymbol;
+
+            while (current != null)
+            {
+                items.Push(current);
+                current = current.ContainingType;
+            }
+
+            var stringBuilder = new StringBuilder();
+            int i = 0;
+            while (items.Count != 0)
+            {
+                var item = items.Pop();
+
+                if (i != 0)
+                {
+                    stringBuilder.Append('.');
+                }
+                else
+                {
+                    stringBuilder.Append(namedTypeSymbol.ContainingNamespace.ToDisplayString()).Append('.');
+                }
+
+                stringBuilder.Append(item.Name);
+
+                if (item is INamedTypeSymbol aritySymbol && aritySymbol.Arity > 0)
+                {
+                    stringBuilder.Append('`')
+                        .Append(aritySymbol.Arity.ToString(CultureInfo.InvariantCulture));
+                }
+
+                i++;
+            }
+
+            return stringBuilder.ToString();
+        }
+
         private static (bool IsInternalType, string TypeName) GetBuiltInType(string typeName)
         {
             if (TypesMetadata.FullToBuiltInTypes.TryGetValue(typeName, out var builtInName))
@@ -237,11 +272,16 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators
 
             var message = obsoleteAttribute.ConstructorArguments.FirstOrDefault().Value?.ToString();
             var isError = bool.Parse(obsoleteAttribute.ConstructorArguments.ElementAtOrDefault(1).Value?.ToString() ?? bool.FalseString) ? SyntaxKind.TrueLiteralExpression : SyntaxKind.FalseLiteralExpression;
-            var attribute = Attribute(
-                IdentifierName("global::System.ObsoleteAttribute"),
-                AttributeArgumentList(SeparatedList(new[] { AttributeArgument(LiteralExpression(SyntaxKind.StringLiteralExpression, Literal(message))), AttributeArgument(LiteralExpression(isError)) })));
 
-            return AttributeList(SingletonSeparatedList(attribute));
+            if (message != null && !string.IsNullOrWhiteSpace(message))
+            {
+                var attribute = Attribute(
+                    IdentifierName("global::System.ObsoleteAttribute"),
+                    AttributeArgumentList(SeparatedList(new[] { AttributeArgument(LiteralExpression(SyntaxKind.StringLiteralExpression, Literal(message))), AttributeArgument(LiteralExpression(isError)) })));
+                return AttributeList(SingletonSeparatedList(attribute));
+            }
+
+            return null;
         }
 
         private static string GetKeywordSafeName(this string name)

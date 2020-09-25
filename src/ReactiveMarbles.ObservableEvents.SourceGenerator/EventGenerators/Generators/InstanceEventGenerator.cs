@@ -24,7 +24,7 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators.Gener
         {
             var namespaceName = item.ContainingNamespace.ToDisplayString(RoslynHelpers.SymbolDisplayFormat);
 
-            var eventWrapper = GenerateEventWrapperClass(item, item.GetEvents(), generateEmpty);
+            var eventWrapper = GenerateEventWrapperClass(item, item.GetEvents().ToArray(), generateEmpty);
 
             if (eventWrapper != null)
             {
@@ -38,8 +38,9 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators.Gener
         private static ConstructorDeclarationSyntax GenerateEventWrapperClassConstructor(INamedTypeSymbol typeDefinition, bool hasBaseClass)
         {
             const string dataParameterName = "data";
+            string className = "Rx" + typeDefinition.Name + "Events";
             var constructor = ConstructorDeclaration(
-                    Identifier("Rx" + typeDefinition.Name + "Events"))
+                    Identifier(className))
                 .WithModifiers(
                     TokenList(
                         Token(SyntaxKind.PublicKeyword)))
@@ -50,10 +51,13 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators.Gener
                                     Identifier(dataParameterName))
                                 .WithType(
                                     IdentifierName(typeDefinition.GenerateFullGenericName())))))
-                .WithBody(Block(SingletonList(
-                    ExpressionStatement(
-                        AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, IdentifierName(DataFieldName), IdentifierName("data"))))))
-                .WithLeadingTrivia(XmlSyntaxFactory.GenerateSummarySeeAlsoComment("Initializes a new instance of the {0} class.", typeDefinition.ConvertToDocument(), (dataParameterName, "The class that is being wrapped.")));
+                .WithBody(
+                    Block(
+                        SingletonList(
+                            ExpressionStatement(
+                                AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, IdentifierName(DataFieldName), IdentifierName("data"))))))
+                .WithLeadingTrivia(
+                    XmlSyntaxFactory.GenerateSummarySeeAlsoComment("Initializes a new instance of the {0} class.", className, (dataParameterName, "The class that is being wrapped.")));
 
             if (hasBaseClass)
             {
@@ -70,7 +74,7 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators.Gener
                 .WithModifiers(TokenList(Token(SyntaxKind.PrivateKeyword), Token(SyntaxKind.ReadOnlyKeyword)));
         }
 
-        private static ClassDeclarationSyntax GenerateEventWrapperClass(INamedTypeSymbol typeDefinition, IReadOnlyList<IEventSymbol> events, bool generateAlways)
+        private static ClassDeclarationSyntax? GenerateEventWrapperClass(INamedTypeSymbol typeDefinition, IReadOnlyList<IEventSymbol> events, bool generateAlways)
         {
             var baseTypeDefinition = typeDefinition.GetBasesWithCondition(RoslynHelpers.HasEvents).FirstOrDefault();
 
@@ -95,10 +99,10 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators.Gener
             }
 
             var classDeclaration = ClassDeclaration("Rx" + typeDefinition.Name + "Events")
-                .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
+                .WithModifiers(TokenList(Token(SyntaxKind.InternalKeyword)))
                 .WithMembers(List(members))
                 .WithObsoleteAttribute(typeDefinition)
-                .WithLeadingTrivia(XmlSyntaxFactory.GenerateSummarySeeAlsoComment("A class which wraps the events contained within the {0} class as observables.", typeDefinition.ConvertToDocument()));
+                .WithLeadingTrivia(XmlSyntaxFactory.GenerateSummarySeeAlsoComment("A class which wraps the events contained within the {0} class as observables.", typeDefinition.GetArityDisplayName()));
 
             if (baseTypeDefinition != null)
             {
