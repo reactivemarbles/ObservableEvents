@@ -17,6 +17,10 @@ jobs:
     steps:
       - name: Is Release
         run: echo ${{ env.validRelease }}
+        
+      - name: Test
+        if: ${{ env.validRelease }}
+        run: Echo "hello world"
     # steps:
     # - name: Checkout
     #   uses: actions/checkout@v2
