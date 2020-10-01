@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30503.244
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReactiveMarbles.ObservableEvents.Test", "ReactiveMarbles.ObservableEvents.Tests\ReactiveMarbles.ObservableEvents.Test.csproj", "{2AF6CBC6-6EE4-4C99-B769-2A777DE6ADFC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReactiveMarbles.ObservableEvents.Example", "ReactiveMarbles.ObservableEvents.Example\ReactiveMarbles.ObservableEvents.Example.csproj", "{2AF6CBC6-6EE4-4C99-B769-2A777DE6ADFC}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReactiveMarbles.ObservableEvents.SourceGenerator", "ReactiveMarbles.ObservableEvents.SourceGenerator\ReactiveMarbles.ObservableEvents.SourceGenerator.csproj", "{611C5578-EBDB-4B10-81D1-E7CBEC52D8FB}"
 EndProject

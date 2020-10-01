@@ -11,6 +11,8 @@ using ReactiveMarbles.ObservableEvents;
 
 using Xamarin.Forms;
 
+[assembly: GenerateStaticEventObservablesAttribute(typeof(StaticTest))]
+
 #pragma warning disable
 namespace ReactiveMarbles.ObservableEvents
 {
@@ -24,7 +26,7 @@ namespace ReactiveMarbles.ObservableEvents
         /// </summary>
         public void Test()
         {
-            var events = this.Events().PropertyChanged.Subscribe();
+            this.Events().PropertyChanged.Subscribe();
         }
     }
 
@@ -34,5 +36,10 @@ namespace ReactiveMarbles.ObservableEvents
         {
             this.Events();
         }
+    }
+
+    public static class StaticTest
+    {
+        public static event EventHandler? TestChanged;
     }
 }
