@@ -48,6 +48,10 @@ namespace ReactiveMarbles.ObservableEvents
         }
     }
 
+    /// <summary>
+    /// Generates a IObservable`T` wrapper for the specified type.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Assembly)]
     internal class GenerateStaticEventObservablesAttribute : Attribute
     {
         /// <summary>
@@ -59,7 +63,7 @@ namespace ReactiveMarbles.ObservableEvents
             Type = type;
         }
         
-        /// <summary>Gets the Type to generate the static event observable wrappers for.
+        /// <summary>Gets the Type to generate the static event observable wrappers for.</summary>
         public Type Type { get; }
     }
 
@@ -82,7 +86,6 @@ namespace ReactiveMarbles.ObservableEvents
                 return;
             }
 
-            ////Debugger.Launch();
             var compilation = context.Compilation;
             var options = (compilation as CSharpCompilation)?.SyntaxTrees[0].Options as CSharpParseOptions;
             compilation = context.Compilation.AddSyntaxTrees(CSharpSyntaxTree.ParseText(SourceText.From(ExtensionMethodText, Encoding.UTF8), options));
@@ -126,8 +129,8 @@ namespace ReactiveMarbles.ObservableEvents
         private static void GetAvailableTypes(
             Compilation compilation,
             SyntaxReceiver receiver,
-            out List<(InvocationExpressionSyntax Invocation, IMethodSymbol Method, INamedTypeSymbol NamedType)> instanceNamespaceList,
-            out List<(InvocationExpressionSyntax Invocation, IMethodSymbol Method, INamedTypeSymbol NamedType)> staticNamespaceList)
+            out List<(Location Location, INamedTypeSymbol NamedType)> instanceNamespaceList,
+            out List<(Location Location, INamedTypeSymbol NamedType)> staticNamespaceList)
         {
             var observableGeneratorExtensions = compilation.GetTypeByMetadataName("ReactiveMarbles.ObservableEvents.ObservableGeneratorExtensions");
 
@@ -136,8 +139,8 @@ namespace ReactiveMarbles.ObservableEvents
                 throw new InvalidOperationException("Cannot find ReactiveMarbles.ObservableEvents.ObservableGeneratorExtensions");
             }
 
-            instanceNamespaceList = new List<(InvocationExpressionSyntax, IMethodSymbol, INamedTypeSymbol)>();
-            staticNamespaceList = new List<(InvocationExpressionSyntax, IMethodSymbol, INamedTypeSymbol)>();
+            instanceNamespaceList = new List<(Location Location, INamedTypeSymbol NamedType)>();
+            staticNamespaceList = new List<(Location Location, INamedTypeSymbol NamedType)>();
 
             foreach (var invocation in receiver.InstanceCandidates)
             {
@@ -166,16 +169,33 @@ namespace ReactiveMarbles.ObservableEvents
                     continue;
                 }
 
-                var list = callingSymbol.IsStatic ? staticNamespaceList : instanceNamespaceList;
-                list.Add((invocation, methodSymbol, callingSymbol));
+                var location = Location.Create(invocation.SyntaxTree, invocation.Span);
+
+                instanceNamespaceList.Add((location, callingSymbol));
             }
 
-            Debugger.Launch();
-            foreach (var attribute in receiver.StaticCandidates)
+            foreach (var attribute in compilation.Assembly.GetAttributes())
             {
-                var semanticModel = compilation.GetSemanticModel(attribute.SyntaxTree);
+                if (attribute.AttributeClass.Name != "GenerateStaticEventObservablesAttribute")
+                {
+                    continue;
+                }
 
-                var attributeSymbol = semanticModel.GetSymbolInfo(attribute.ArgumentList.Arguments[0].Expression).Symbol;
+                if (attribute.ConstructorArguments.Length == 0)
+                {
+                    continue;
+                }
+
+                var type = attribute.ConstructorArguments[0].Value as INamedTypeSymbol;
+
+                if (type == null)
+                {
+                    continue;
+                }
+
+                var location = Location.Create(attribute.ApplicationSyntaxReference.SyntaxTree, attribute.ApplicationSyntaxReference.Span);
+
+                staticNamespaceList.Add((location, type));
             }
         }
 
@@ -183,7 +203,7 @@ namespace ReactiveMarbles.ObservableEvents
             GeneratorExecutionContext context,
             IEventSymbolGenerator symbolGenerator,
             bool isStatic,
-            IReadOnlyList<(InvocationExpressionSyntax Invocation, IMethodSymbol Method, INamedTypeSymbol NamedType)> symbols,
+            IReadOnlyList<(Location Location, INamedTypeSymbol NamedType)> symbols,
             List<MethodDeclarationSyntax>? methodInvocationExtensions = null)
         {
             var processedItems = new HashSet<INamedTypeSymbol>(TypeDefinitionNameComparer.Default);
@@ -246,8 +266,7 @@ namespace ReactiveMarbles.ObservableEvents
 
                 if (!hasEvents)
                 {
-                    var location = Location.Create(symbol.Invocation.SyntaxTree, symbol.Invocation.Span);
-                    context.ReportDiagnostic(Diagnostic.Create(new DiagnosticDescriptor("PHARM001", "Events not found", $"Could not find events on '{symbol.Method.ToDisplayString(RoslynHelpers.SymbolDisplayFormat)}' or its base classes.", "ObservableEventsGenerator", DiagnosticSeverity.Warning, true), location));
+                    context.ReportDiagnostic(Diagnostic.Create(new DiagnosticDescriptor("PHARM001", "Events not found", $"Could not find events on '{symbol.NamedType.ToDisplayString(RoslynHelpers.SymbolDisplayFormat)}' or its base classes.", "ObservableEventsGenerator", DiagnosticSeverity.Warning, true), symbol.Location));
                 }
             }
 

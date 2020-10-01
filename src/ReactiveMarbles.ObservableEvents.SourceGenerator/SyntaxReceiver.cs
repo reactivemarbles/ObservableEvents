@@ -17,18 +17,11 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator
     {
         public List<InvocationExpressionSyntax> InstanceCandidates { get; } = new List<InvocationExpressionSyntax>();
 
-        public List<AttributeSyntax> StaticCandidates { get; } = new List<AttributeSyntax>();
-
         public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
         {
             if (syntaxNode is InvocationExpressionSyntax invocation)
             {
                 InstanceCandidates.Add(invocation);
-            }
-
-            if (syntaxNode is AttributeSyntax attribute && attribute.Name.ToFullString() == "GenerateStaticEventObservablesAttribute")
-            {
-                StaticCandidates.Add(attribute);
             }
         }
     }
