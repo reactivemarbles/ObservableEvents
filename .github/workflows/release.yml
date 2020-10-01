@@ -15,11 +15,14 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-      if: ${{ env.validRelease }}      
-      with:
-        fetch-depth: 0
+      - name: Is Release
+        run: echo ${{ env.validRelease }}
+    # steps:
+    # - name: Checkout
+    #   uses: actions/checkout@v2
+    #   if: ${{ env.validRelease }}      
+    #   with:
+    #     fetch-depth: 0
 
     # - name: 
 
