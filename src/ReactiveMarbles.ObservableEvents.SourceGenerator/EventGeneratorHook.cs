@@ -176,7 +176,7 @@ namespace ReactiveMarbles.ObservableEvents
 
             foreach (var attribute in compilation.Assembly.GetAttributes())
             {
-                if (attribute.AttributeClass.Name != "GenerateStaticEventObservablesAttribute")
+                if (attribute.AttributeClass.ToString() != "ReactiveMarbles.ObservableEvents.GenerateStaticEventObservablesAttribute")
                 {
                     continue;
                 }
@@ -193,7 +193,7 @@ namespace ReactiveMarbles.ObservableEvents
                     continue;
                 }
 
-                var location = Location.Create(attribute.ApplicationSyntaxReference.SyntaxTree, attribute.ApplicationSyntaxReference.Span);
+                var location = attribute.ApplicationSyntaxReference == null ? Location.None : Location.Create(attribute.ApplicationSyntaxReference.SyntaxTree, attribute.ApplicationSyntaxReference.Span);
 
                 staticNamespaceList.Add((location, type));
             }

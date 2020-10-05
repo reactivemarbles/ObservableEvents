@@ -9,6 +9,7 @@ on:
 env:
   configuration: Release
   productNamespacePrefix: "DynamicData"
+  validRelease: ${{ contains(github.event.pull_request.labels.*.name, 'release') && github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true }}
 
 jobs:
   build:
@@ -67,3 +68,7 @@ jobs:
     #   with:
     #     token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
     #     directory: artifacts/coverage
+
+    - name: Release to NuGet
+      if: ${{ env.validRelease == true }}
+      run: echo ${{ env.ValidRelease }}

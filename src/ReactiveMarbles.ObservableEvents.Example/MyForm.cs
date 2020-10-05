@@ -27,6 +27,8 @@ namespace ReactiveMarbles.ObservableEvents
         public void Test()
         {
             this.Events().PropertyChanged.Subscribe();
+
+            ////RxStaticTestEvents.TestChanged.Subscribe(); 
         }
     }
 
