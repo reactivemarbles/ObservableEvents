@@ -9,7 +9,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.7.1" />
-		<PackageReference Include="splat" Version="9.5.49" />
+		<PackageReference Include="splat" Version="10.0.1" />
 		<PackageReference Include="xunit" Version="2.4.1" />
 		<PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
 			<PrivateAssets>all</PrivateAssets>
