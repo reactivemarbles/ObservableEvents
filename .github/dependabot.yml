@@ -1,0 +1,43 @@
+version: 2
+updates:
+- package-ecosystem: nuget
+  directory: "/"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: Nerdbank.GitVersioning
+    versions:
+    - 3.3.37
+    - 3.4.190
+  - dependency-name: NuGet.LibraryModel
+    versions:
+    - 5.9.0
+  - dependency-name: NuGet.Protocol
+    versions:
+    - 5.9.0
+  - dependency-name: Microsoft.NET.Test.Sdk
+    versions:
+    - 16.8.3
+    - 16.9.1
+  - dependency-name: coverlet.collector
+    versions:
+    - 3.0.2
+  - dependency-name: splat
+    versions:
+    - 10.0.1
+  - dependency-name: Microsoft.CodeAnalysis.FxCopAnalyzers
+    versions:
+    - 3.3.2
+  - dependency-name: Microsoft.CodeAnalysis.Analyzers
+    versions:
+    - 3.3.2
+  - dependency-name: Microsoft.CodeAnalysis.CSharp.Workspaces
+    versions:
+    - 3.8.0
+  - dependency-name: Microsoft.CodeAnalysis.CSharp
+    versions:
+    - 3.8.0
+  - dependency-name: System.Reactive
+    versions:
+    - 5.0.0
