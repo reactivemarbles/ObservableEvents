@@ -1,74 +1,145 @@
-﻿// Copyright (c) 2020 ReactiveUI Association Inc. All rights reserved.
+﻿// Copyright (c) 2019-2021 ReactiveUI Association Inc. All rights reserved.
 // ReactiveUI Association Inc licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Reflection;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-using NuGet.LibraryModel;
-using NuGet.Packaging;
+using ReactiveMarbles.ObservableEvents.SourceGenerator;
 
-using ReactiveMarbles.NuGet.Helpers;
+using Xunit.Abstractions;
 
 namespace ReactiveMarbles.ObservableEvents.Tests
 {
-    internal static class SourceGeneratorUtility
+    internal class SourceGeneratorUtility
     {
-        public static async Task<CompilationUnitSyntax> GetCompilationForNuGetLibrary(params LibraryRange[] nugetLibraries)
-        {
-            var packageFiles = await NuGetPackageHelper.DownloadPackageFilesAndFolder(nugetLibraries).ConfigureAwait(false);
+        private ITestOutputHelper _testOutputHelper;
 
-            return SyntaxFactory.CompilationUnit();
+        public SourceGeneratorUtility(ITestOutputHelper testOutputHelper)
+        {
+            _testOutputHelper = testOutputHelper;
         }
 
-        public static async Task<(ImmutableArray<Diagnostic> Diagnostics, string Output)> GetGeneratedOutput<T>(string source, params LibraryRange[] nugetLibraries)
-            where T : ISourceGenerator, new()
+        public void RunGenerator(Type[] types, out ImmutableArray<Diagnostic> compilationDiagnostics, out ImmutableArray<Diagnostic> generatorDiagnostics, params string[] sources)
         {
-            var syntaxTree = CSharpSyntaxTree.ParseText(source);
+            var compilation = CreateCompilation(types, sources);
 
-            var references = new List<MetadataReference>();
+            var newCompilation = RunGenerators(compilation, out generatorDiagnostics, new EventGenerator());
 
-            var referenceFileLocations = new HashSet<string>();
-            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            compilationDiagnostics = newCompilation.GetDiagnostics();
+
+            var compilationErrors = compilationDiagnostics.Where(x => x.Severity == DiagnosticSeverity.Error).Select(x => x.GetMessage()).ToList();
+            var outputSources = string.Join(Environment.NewLine, newCompilation.SyntaxTrees.Select(x => x.ToString()).Where(x => !x.Contains("The impementation should have been generated.")));
+
+            if (compilationErrors.Count > 0)
             {
-                if (!assembly.IsDynamic)
+                _testOutputHelper.WriteLine(outputSources);
+                throw new InvalidOperationException(string.Join('\n', compilationErrors));
+            }
+        }
+
+        /// <summary>
+        /// Creates a compilation.
+        /// </summary>
+        /// <param name="types">The types to include.</param>
+        /// <param name="sources">The source code to include.</param>
+        /// <returns>The created compilation.</returns>
+        private static Compilation CreateCompilation(Type[] types, params string[] sources)
+        {
+            var assemblyPath = Path.GetDirectoryName(typeof(object).Assembly.Location);
+
+            if (assemblyPath == null || string.IsNullOrWhiteSpace(assemblyPath))
+            {
+                throw new InvalidOperationException("Could not find a valid assembly path.");
+            }
+
+            var assemblies = new HashSet<string>();
+            var processingStack = new Queue<Assembly>(types.Select(type => type.GetTypeInfo().Assembly));
+            var domainAssemblies = AppDomain.CurrentDomain.GetAssemblies();
+
+            while (processingStack.Count != 0)
+            {
+                var assembly = processingStack.Dequeue();
+                var assemblyLocaiton = assembly.Location;
+
+                if (assemblies.Contains(assemblyLocaiton))
                 {
-                    referenceFileLocations.Add(assembly.Location);
+                    continue;
+                }
+
+                assemblies.Add(assemblyLocaiton);
+
+                foreach (var referencedAssemblyLocation in assembly.GetReferencedAssemblies())
+                {
+                    var referencedAssembly = Array.Find(domainAssemblies, x => x.FullName == referencedAssemblyLocation.FullName);
+
+                    if (referencedAssembly == null)
+                    {
+                        continue;
+                    }
+
+                    processingStack.Enqueue(referencedAssembly);
                 }
             }
 
-            var packageFiles = await NuGetPackageHelper.DownloadPackageFilesAndFolder(nugetLibraries).ConfigureAwait(false);
-
-            referenceFileLocations.AddRange(packageFiles.IncludeGroup.GetAllFileNames());
-            referenceFileLocations.AddRange(packageFiles.SupportGroup.GetAllFileNames());
-
-            foreach (var packageFile in referenceFileLocations)
+            var defaultPaths = new[]
             {
-                references.Add(MetadataReference.CreateFromFile(packageFile));
+                Path.Combine(assemblyPath, "mscorlib.dll"),
+                Path.Combine(assemblyPath, "System.dll"),
+                Path.Combine(assemblyPath, "System.Core.dll"),
+                Path.Combine(assemblyPath, "System.ComponentModel.dll"),
+                Path.Combine(assemblyPath, "System.Console.dll"),
+                Path.Combine(assemblyPath, "System.Runtime.dll"),
+                Path.Combine(assemblyPath, "netstandard.dll"),
+                Path.Combine(assemblyPath, "System.Linq.Expressions.dll"),
+                Path.Combine(assemblyPath, "System.ObjectModel.dll"),
+                Path.Combine(assemblyPath, "System.Private.CoreLib.dll"),
+            };
+
+            foreach (var defaultPath in defaultPaths)
+            {
+                if (assemblies.Contains(defaultPath))
+                {
+                    continue;
+                }
+
+                assemblies.Add(defaultPath);
             }
 
-            var compilation = CSharpCompilation.Create("foo", new SyntaxTree[] { syntaxTree }, references, new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+            var references = assemblies.Select(x => MetadataReference.CreateFromFile(x));
 
-            var diagnostics = compilation.GetDiagnostics();
-
-            if (diagnostics.Any())
-            {
-                return (diagnostics, string.Empty);
-            }
-
-            var generator = new T();
-
-            var driver = CSharpGeneratorDriver.Create(new ISourceGenerator[] { generator });
-            driver.RunGeneratorsAndUpdateCompilation(compilation, out var outputCompilation, out diagnostics);
-
-            return (diagnostics, outputCompilation.SyntaxTrees.Last().ToString());
+            return CSharpCompilation.Create(
+                assemblyName: "compilation" + Guid.NewGuid(),
+                syntaxTrees: sources.Select(x => CSharpSyntaxTree.ParseText(x, new CSharpParseOptions(LanguageVersion.Latest))),
+                references: references,
+                options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, deterministic: true));
         }
+
+        /// <summary>
+        /// Executes the source generators.
+        /// </summary>
+        /// <param name="compilation">The target compilation.</param>
+        /// <param name="diagnostics">The resulting diagnostics.</param>
+        /// <param name="generators">The generators to include in the compilation.</param>
+        /// <returns>The new compilation after the generators have executed.</returns>
+        private static Compilation RunGenerators(Compilation compilation, out ImmutableArray<Diagnostic> diagnostics, params ISourceGenerator[] generators)
+        {
+            CreateDriver(compilation, generators).RunGeneratorsAndUpdateCompilation(compilation, out var outputCompilation, out diagnostics);
+            return outputCompilation;
+        }
+
+        private static GeneratorDriver CreateDriver(Compilation compilation, params ISourceGenerator[] generators) =>
+            CSharpGeneratorDriver.Create(
+                generators: ImmutableArray.Create(generators),
+                additionalTexts: ImmutableArray<AdditionalText>.Empty,
+                parseOptions: (CSharpParseOptions)compilation.SyntaxTrees.First().Options,
+                optionsProvider: null);
     }
 }
