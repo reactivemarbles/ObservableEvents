@@ -1,10 +1,11 @@
-﻿// Copyright (c) 2019-2021 ReactiveUI Association Inc. All rights reserved.
-// ReactiveUI Association Inc licenses this file to you under the MIT license.
+﻿// Copyright (c) 2019-2021 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -20,7 +21,36 @@ namespace ReactiveMarbles.ObservableEvents.Tests
 {
     internal class SourceGeneratorUtility
     {
+        private static readonly Dictionary<string, MetadataReference> DomainAssemblyReferences =
+            AppDomain.CurrentDomain.GetAssemblies().Where(x => !x.IsDynamic).Distinct(AssemblyEqualityComparer.Default).ToDictionary(x => x.FullName, x => (MetadataReference)MetadataReference.CreateFromFile(x.Location));
+
+        private static readonly Dictionary<string, Assembly> DomainAssemblies =
+            AppDomain.CurrentDomain.GetAssemblies().Distinct(AssemblyEqualityComparer.Default).ToDictionary(x => x.FullName);
+
+        private static readonly MetadataReference[] SystemAssemblyReferences;
         private ITestOutputHelper _testOutputHelper;
+
+        static SourceGeneratorUtility()
+        {
+            var assemblies = new HashSet<MetadataReference>();
+
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                if (!assembly.FullName.StartsWith("System") && !assembly.FullName.StartsWith("mscordlib") && !assembly.FullName.StartsWith("netstandard"))
+                {
+                    continue;
+                }
+
+                if (assembly.IsDynamic)
+                {
+                    continue;
+                }
+
+                assemblies.Add(DomainAssemblyReferences[assembly.FullName]);
+            }
+
+            SystemAssemblyReferences = assemblies.ToArray();
+        }
 
         public SourceGeneratorUtility(ITestOutputHelper testOutputHelper)
         {
@@ -35,12 +65,19 @@ namespace ReactiveMarbles.ObservableEvents.Tests
 
             compilationDiagnostics = newCompilation.GetDiagnostics();
 
-            var compilationErrors = compilationDiagnostics.Where(x => x.Severity == DiagnosticSeverity.Error).Select(x => x.GetMessage()).ToList();
-            var outputSources = string.Join(Environment.NewLine, newCompilation.SyntaxTrees.Select(x => x.ToString()).Where(x => !x.Contains("The impementation should have been generated.")));
+            ShouldHaveNoCompilerDiagnosticsWarningOrAbove(_testOutputHelper, newCompilation, compilationDiagnostics);
+            ShouldHaveNoCompilerDiagnosticsWarningOrAbove(_testOutputHelper, compilation, generatorDiagnostics);
+        }
+
+        private static void ShouldHaveNoCompilerDiagnosticsWarningOrAbove(ITestOutputHelper output, Compilation compilation, IEnumerable<Diagnostic> diagnostics)
+        {
+            var compilationErrors = diagnostics.Where(x => x.Severity >= DiagnosticSeverity.Warning).Select(x => $"{x.Location.SourceTree.FilePath} ({x.Location.GetLineSpan().StartLinePosition}): {x.GetMessage()}{Environment.NewLine}").ToList();
+
+            var outputSources = string.Join(Environment.NewLine, compilation.SyntaxTrees.Select(x => $"// {x.FilePath}:{Environment.NewLine}{x}").Where(x => !x.Contains("The impementation should have been generated.")));
 
             if (compilationErrors.Count > 0)
             {
-                _testOutputHelper.WriteLine(outputSources);
+                output.WriteLine(outputSources);
                 throw new InvalidOperationException(string.Join('\n', compilationErrors));
             }
         }
@@ -60,25 +97,33 @@ namespace ReactiveMarbles.ObservableEvents.Tests
                 throw new InvalidOperationException("Could not find a valid assembly path.");
             }
 
-            var assemblies = new HashSet<string>();
+            var assemblies = new HashSet<MetadataReference>();
             var processingStack = new Queue<Assembly>(types.Select(type => type.GetTypeInfo().Assembly));
-            var domainAssemblies = AppDomain.CurrentDomain.GetAssemblies();
 
             while (processingStack.Count != 0)
             {
                 var assembly = processingStack.Dequeue();
-                var assemblyLocaiton = assembly.Location;
 
-                if (assemblies.Contains(assemblyLocaiton))
+                if (assembly.IsDynamic)
                 {
                     continue;
                 }
 
-                assemblies.Add(assemblyLocaiton);
+                var assemblyReference = DomainAssemblyReferences[assembly.FullName];
+
+                if (assemblies.Contains(assemblyReference))
+                {
+                    continue;
+                }
+
+                assemblies.Add(assemblyReference);
 
                 foreach (var referencedAssemblyLocation in assembly.GetReferencedAssemblies())
                 {
-                    var referencedAssembly = Array.Find(domainAssemblies, x => x.FullName == referencedAssemblyLocation.FullName);
+                    if (!DomainAssemblies.TryGetValue(referencedAssemblyLocation.FullName, out var referencedAssembly))
+                    {
+                        continue;
+                    }
 
                     if (referencedAssembly == null)
                     {
@@ -89,36 +134,10 @@ namespace ReactiveMarbles.ObservableEvents.Tests
                 }
             }
 
-            var defaultPaths = new[]
-            {
-                Path.Combine(assemblyPath, "mscorlib.dll"),
-                Path.Combine(assemblyPath, "System.dll"),
-                Path.Combine(assemblyPath, "System.Core.dll"),
-                Path.Combine(assemblyPath, "System.ComponentModel.dll"),
-                Path.Combine(assemblyPath, "System.Console.dll"),
-                Path.Combine(assemblyPath, "System.Runtime.dll"),
-                Path.Combine(assemblyPath, "netstandard.dll"),
-                Path.Combine(assemblyPath, "System.Linq.Expressions.dll"),
-                Path.Combine(assemblyPath, "System.ObjectModel.dll"),
-                Path.Combine(assemblyPath, "System.Private.CoreLib.dll"),
-            };
-
-            foreach (var defaultPath in defaultPaths)
-            {
-                if (assemblies.Contains(defaultPath))
-                {
-                    continue;
-                }
-
-                assemblies.Add(defaultPath);
-            }
-
-            var references = assemblies.Select(x => MetadataReference.CreateFromFile(x));
-
             return CSharpCompilation.Create(
                 assemblyName: "compilation" + Guid.NewGuid(),
                 syntaxTrees: sources.Select(x => CSharpSyntaxTree.ParseText(x, new CSharpParseOptions(LanguageVersion.Latest))),
-                references: references,
+                references: assemblies.Concat(SystemAssemblyReferences),
                 options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, deterministic: true));
         }
 
@@ -141,5 +160,31 @@ namespace ReactiveMarbles.ObservableEvents.Tests
                 additionalTexts: ImmutableArray<AdditionalText>.Empty,
                 parseOptions: (CSharpParseOptions)compilation.SyntaxTrees.First().Options,
                 optionsProvider: null);
+
+        private sealed class AssemblyEqualityComparer : IEqualityComparer<Assembly>
+        {
+            private AssemblyEqualityComparer()
+            {
+            }
+
+            public static AssemblyEqualityComparer Default { get; } = new AssemblyEqualityComparer();
+
+            public bool Equals([AllowNull] Assembly x, [AllowNull] Assembly y)
+            {
+                if (x is null && y is null)
+                {
+                    return true;
+                }
+
+                if (x is null || y is null)
+                {
+                    return false;
+                }
+
+                return string.Equals(x.FullName, y.FullName, StringComparison.InvariantCultureIgnoreCase);
+            }
+
+            public int GetHashCode([DisallowNull] Assembly obj) => obj.FullName?.GetHashCode() ?? 0;
+        }
     }
 }

@@ -1,5 +1,5 @@
-﻿// Copyright (c) 2019-2021 ReactiveUI Association Inc. All rights reserved.
-// ReactiveUI Association Inc licenses this file to you under the MIT license.
+﻿// Copyright (c) 2019-2021 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System;
@@ -23,9 +23,9 @@ namespace ReactiveMarbles.NuGet.Helpers
     /// </summary>
     public static class ReferenceLocator
     {
-        private static readonly PackageIdentity VSWherePackageIdentity = new PackageIdentity("VSWhere", new NuGetVersion("2.6.7"));
+        private static readonly PackageIdentity VSWherePackageIdentity = new("VSWhere", new NuGetVersion("2.6.7"));
 
-        private static readonly ConcurrentDictionary<bool, string> _windowsInstallationDirectory = new ConcurrentDictionary<bool, string>();
+        private static readonly ConcurrentDictionary<bool, string> _windowsInstallationDirectory = new();
 
         /// <summary>
         /// Gets the reference location.

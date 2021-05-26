@@ -1,12 +1,10 @@
-﻿// Copyright (c) 2019-2021 ReactiveUI Association Inc. All rights reserved.
-// ReactiveUI Association Inc licenses this file to you under the MIT license.
+﻿// Copyright (c) 2019-2021 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -19,7 +17,7 @@ using ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators;
 using ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators.Generators;
 using ReactiveMarbles.PropertyChanged.SourceGenerator;
 
-using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
+using static ReactiveMarbles.ObservableEvents.SourceGenerator.SyntaxFactoryHelpers;
 
 namespace ReactiveMarbles.ObservableEvents.SourceGenerator
 {
@@ -73,8 +71,8 @@ namespace ReactiveMarbles.ObservableEvents
     }
 }";
 
-        private static readonly InstanceEventGenerator _eventGenerator = new InstanceEventGenerator();
-        private static readonly StaticEventGenerator _staticEventGenerator = new StaticEventGenerator();
+        private static readonly InstanceEventGenerator _eventGenerator = new();
+        private static readonly StaticEventGenerator _staticEventGenerator = new();
 
         /// <inheritdoc />
         public void Execute(GeneratorExecutionContext context)
@@ -110,12 +108,9 @@ namespace ReactiveMarbles.ObservableEvents
 
         private static void GenerateEventExtensionMethods(GeneratorExecutionContext context, List<MethodDeclarationSyntax> methodInvocationExtensions)
         {
-            var classDeclaration = ClassDeclaration("ObservableGeneratorExtensions")
-                .WithModifiers(TokenList(Token(SyntaxKind.InternalKeyword), Token(SyntaxKind.StaticKeyword), Token(SyntaxKind.PartialKeyword)))
-                .WithMembers(List<MemberDeclarationSyntax>(methodInvocationExtensions));
+            var classDeclaration = ClassDeclaration("ObservableGeneratorExtensions", new[] { SyntaxKind.InternalKeyword, SyntaxKind.StaticKeyword, SyntaxKind.PartialKeyword }, methodInvocationExtensions, 1);
 
-            var namespaceDeclaration = NamespaceDeclaration(IdentifierName("ReactiveMarbles.ObservableEvents"))
-                .WithMembers(SingletonList<MemberDeclarationSyntax>(classDeclaration));
+            var namespaceDeclaration = NamespaceDeclaration("ReactiveMarbles.ObservableEvents", new[] { classDeclaration }, true);
 
             var compilationUnit = GenerateCompilationUnit(namespaceDeclaration);
 
@@ -124,7 +119,7 @@ namespace ReactiveMarbles.ObservableEvents
                 return;
             }
 
-            context.AddSource("TestExtensions.FoundEvents.SourceGenerated.cs", SourceText.From(compilationUnit.NormalizeWhitespace().ToFullString(), Encoding.UTF8));
+            context.AddSource("TestExtensions.FoundEvents.SourceGenerated.cs", SourceText.From(compilationUnit.ToFullString(), Encoding.UTF8));
         }
 
         private static void GetAvailableTypes(
@@ -146,9 +141,8 @@ namespace ReactiveMarbles.ObservableEvents
             foreach (var invocation in receiver.InstanceCandidates)
             {
                 var semanticModel = compilation.GetSemanticModel(invocation.SyntaxTree);
-                var methodSymbol = semanticModel.GetSymbolInfo(invocation).Symbol as IMethodSymbol;
 
-                if (methodSymbol == null)
+                if (semanticModel.GetSymbolInfo(invocation).Symbol is not IMethodSymbol methodSymbol)
                 {
                     continue;
                 }
@@ -163,9 +157,7 @@ namespace ReactiveMarbles.ObservableEvents
                     continue;
                 }
 
-                var callingSymbol = methodSymbol.TypeArguments[0] as INamedTypeSymbol;
-
-                if (callingSymbol == null)
+                if (methodSymbol.TypeArguments[0] is not INamedTypeSymbol callingSymbol)
                 {
                     continue;
                 }
@@ -187,9 +179,7 @@ namespace ReactiveMarbles.ObservableEvents
                     continue;
                 }
 
-                var type = attribute.ConstructorArguments[0].Value as INamedTypeSymbol;
-
-                if (type == null)
+                if (attribute.ConstructorArguments[0].Value is not INamedTypeSymbol type)
                 {
                     continue;
                 }
@@ -220,56 +210,40 @@ namespace ReactiveMarbles.ObservableEvents
 
             bool hasEvents = false;
 
-            foreach (var symbol in symbols)
+            foreach (var (location, item) in symbols)
             {
-                var processingStack = new Stack<INamedTypeSymbol>(new[] { symbol.NamedType });
-
-                while (processingStack.Count != 0)
+                if (processedItems.Contains(item))
                 {
-                    var item = processingStack.Pop();
-
-                    if (processedItems.Contains(item))
-                    {
-                        continue;
-                    }
-
-                    processedItems.Add(item);
-
-                    var baseClassWithEvents = item.GetBasesWithCondition(RoslynHelpers.HasEvents).ToList();
-
-                    var alwaysGenerate = rootContainingSymbols.Contains(item) && (baseClassWithEvents.Count != 0 || item.GetMembers<IEventSymbol>().Any());
-
-                    var namespaceItem = symbolGenerator.Generate(item, alwaysGenerate);
-
-                    foreach (var childItem in baseClassWithEvents)
-                    {
-                        processingStack.Push(childItem);
-                    }
-
-                    if (namespaceItem == null)
-                    {
-                        continue;
-                    }
-
-                    hasEvents = true;
-
-                    var compilationUnit = GenerateCompilationUnit(namespaceItem);
-
-                    if (compilationUnit == null)
-                    {
-                        continue;
-                    }
-
-                    var sourceText = compilationUnit.NormalizeWhitespace().ToFullString();
-
-                    var name = $"SourceClass{item.ToDisplayString(RoslynHelpers.SymbolDisplayFormat)}-{fileType}Events.SourceGenerated.cs";
-
-                    context.AddSource(
-                        name,
-                        SourceText.From(sourceText, Encoding.UTF8));
-
-                    methodInvocationExtensions?.Add(MethodGenerator.GenerateMethod(item));
+                    continue;
                 }
+
+                processedItems.Add(item);
+
+                var namespaceItem = symbolGenerator.Generate(item);
+
+                if (namespaceItem == null)
+                {
+                    continue;
+                }
+
+                hasEvents = true;
+
+                var compilationUnit = GenerateCompilationUnit(namespaceItem);
+
+                if (compilationUnit == null)
+                {
+                    continue;
+                }
+
+                var sourceText = compilationUnit.ToFullString();
+
+                var name = $"SourceClass{item.ToDisplayString(RoslynHelpers.SymbolDisplayFormat)}-{fileType}Events.SourceGenerated.cs";
+
+                context.AddSource(
+                    name,
+                    SourceText.From(sourceText, Encoding.UTF8));
+
+                methodInvocationExtensions?.Add(item.GenerateMethod());
             }
 
             if (!hasEvents)
@@ -282,7 +256,7 @@ namespace ReactiveMarbles.ObservableEvents
 
         private static CompilationUnitSyntax? GenerateCompilationUnit(params NamespaceDeclarationSyntax?[] namespaceItems)
         {
-            var processedItems = new List<NamespaceDeclarationSyntax>(namespaceItems.Length);
+            var members = new List<MemberDeclarationSyntax>(namespaceItems.Length);
             for (int i = 0; i < namespaceItems.Length; ++i)
             {
                 var namespaceItem = namespaceItems[i];
@@ -292,17 +266,15 @@ namespace ReactiveMarbles.ObservableEvents
                     continue;
                 }
 
-                processedItems.Add(namespaceItem);
+                members.Add(namespaceItem);
             }
 
-            if (processedItems.Count == 0)
+            if (members.Count == 0)
             {
                 return null;
             }
 
-            var members = processedItems.Count == 1 ? SingletonList<MemberDeclarationSyntax>(processedItems[0]) : List<MemberDeclarationSyntax>(processedItems);
-
-            return CompilationUnit().WithMembers(members)
+            return CompilationUnit(default, members, default)
                 .WithLeadingTrivia(
                     XmlSyntaxFactory.GenerateDocumentationString(
                         "<auto-generated />"));

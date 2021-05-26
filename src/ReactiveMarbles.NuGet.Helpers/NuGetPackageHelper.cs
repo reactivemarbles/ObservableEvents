@@ -1,5 +1,5 @@
-// Copyright (c) 2019-2021 ReactiveUI Association Inc. All rights reserved.
-// ReactiveUI Association Inc licenses this file to you under the MIT license.
+// Copyright (c) 2019-2021 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System;
@@ -37,9 +37,9 @@ namespace ReactiveMarbles.NuGet.Helpers
 
         // Bunch of NuGet based objects we can cache and only create once.
         private static readonly string _globalPackagesPath;
-        private static readonly NuGetLogger _logger = new NuGetLogger();
+        private static readonly NuGetLogger _logger = new();
         private static readonly SourceCacheContext _sourceCacheContext = NullSourceCacheContext.Instance;
-        private static readonly PackageDownloadContext _downloadContext = new PackageDownloadContext(_sourceCacheContext);
+        private static readonly PackageDownloadContext _downloadContext = new(_sourceCacheContext);
         private static readonly IFrameworkNameProvider _frameworkNameProvider = DefaultFrameworkNameProvider.Instance;
 
         static NuGetPackageHelper()

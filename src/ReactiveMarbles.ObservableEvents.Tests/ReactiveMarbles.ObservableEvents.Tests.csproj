@@ -1,10 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>netcoreapp3.1</TargetFramework>
-
+		<TargetFrameworks>net5.0-windows</TargetFrameworks>
 		<IsPackable>false</IsPackable>
 		<NoWarn>$(NoWarn);SA1600</NoWarn>
+    <LangVersion>latest</LangVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -22,7 +22,10 @@
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="3.10.0-3.final" />
 		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.2" PrivateAssets="all" />
     <PackageReference Include="Avalonia" Version="0.10.5" />
+    <PackageReference Include="Xamarin.Forms" Version="5.*" />
+    <PackageReference Include="Xamarin.Essentials" Version="1.*" />
     <PackageReference Include="FluentAssertions" Version="5.10.3" />
+    <PackageReference Include="Uno.UI" Version="3.*" />
   </ItemGroup>
 
 	<ItemGroup>

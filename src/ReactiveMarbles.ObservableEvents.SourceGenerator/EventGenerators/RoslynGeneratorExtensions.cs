@@ -1,5 +1,5 @@
-﻿// Copyright (c) 2019-2021 ReactiveUI Association Inc. All rights reserved.
-// ReactiveUI Association Inc licenses this file to you under the MIT license.
+﻿// Copyright (c) 2019-2021 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System;
@@ -13,7 +13,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
+using static ReactiveMarbles.ObservableEvents.SourceGenerator.SyntaxFactoryHelpers;
 
 namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators
 {
@@ -24,18 +24,28 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators
         /// </summary>
         /// <param name="parameter">The parameter to generate the argument list for.</param>
         /// <returns>The argument list.</returns>
-        public static ArgumentListSyntax GenerateArgumentList(this IParameterSymbol parameter) => ArgumentList(SingletonSeparatedList(Argument(IdentifierName(parameter.Name.GetKeywordSafeName()))));
+        public static IReadOnlyCollection<ArgumentSyntax> GenerateArgumentList(this IParameterSymbol parameter) => new[] { Argument(parameter.Name.GetKeywordSafeName()) };
 
         /// <summary>
         /// Generates a argument list for a tuple parameter.
         /// </summary>
         /// <param name="parameters">The parameters to generate the argument list for.</param>
         /// <returns>The argument list.</returns>
-        public static ArgumentListSyntax GenerateTupleArgumentList(this IEnumerable<IParameterSymbol> parameters) => ArgumentList(SingletonSeparatedList(Argument(TupleExpression(SeparatedList(parameters.Select(x => Argument(IdentifierName(x.Name.GetKeywordSafeName()))))))));
+        public static IReadOnlyCollection<ArgumentSyntax> GenerateTupleArgumentList(this IEnumerable<IParameterSymbol> parameters) => new[] { Argument(TupleExpression(parameters.Select(x => Argument(x.Name.GetKeywordSafeName())).ToList())) };
 
-        public static TypeSyntax GenerateTupleType(this IEnumerable<(ITypeSymbol Type, string Name)> types)
+        public static TypeSyntax GenerateTupleType(this IReadOnlyCollection<(ITypeSymbol Type, string Name)> typeDescriptors)
         {
-            return TupleType(SeparatedList(types.Select(x => TupleElement(IdentifierName(x.Type.GenerateFullGenericName()), Identifier(x.Name.GetKeywordSafeName())))));
+            var tupleTypes = new List<TupleElementSyntax>(typeDescriptors.Count);
+
+            foreach (var typeDescriptor in typeDescriptors)
+            {
+                var typeName = typeDescriptor.Type.GenerateFullGenericName();
+                var name = typeDescriptor.Name.GetKeywordSafeName();
+
+                tupleTypes.Add(TupleElement(typeName, name));
+            }
+
+            return TupleType(tupleTypes);
         }
 
         public static TypeArgumentListSyntax GenerateObservableTypeArguments(this IMethodSymbol method)
@@ -45,15 +55,15 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators
             // If we have no parameters, use the Unit type, if only one use the type directly, otherwise use a value tuple.
             if (method.Parameters.Length == 0)
             {
-                argumentList = TypeArgumentList(SingletonSeparatedList<TypeSyntax>(IdentifierName(RoslynHelpers.ObservableUnitName)));
+                argumentList = TypeArgumentList(new[] { IdentifierName(RoslynHelpers.ObservableUnitName) });
             }
             else if (method.Parameters.Length == 1)
             {
-                argumentList = TypeArgumentList(SingletonSeparatedList<TypeSyntax>(IdentifierName(method.Parameters[0].Type.GenerateFullGenericName())));
+                argumentList = TypeArgumentList(new[] { IdentifierName(method.Parameters[0].Type.GenerateFullGenericName()) });
             }
             else
             {
-                argumentList = TypeArgumentList(SingletonSeparatedList<TypeSyntax>(TupleType(SeparatedList(method.Parameters.Select(x => TupleElement(IdentifierName(x.Type.GenerateFullGenericName())).WithIdentifier(Identifier(x.Name)))))));
+                argumentList = TypeArgumentList(new[] { TupleType(method.Parameters.Select(x => TupleElement(x.Type.GenerateFullGenericName(), x.Name)).ToList()) });
             }
 
             return argumentList;
@@ -76,16 +86,54 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators
             }
         }
 
-        public static IEnumerable<IEventSymbol> GetEvents(this INamedTypeSymbol namedType)
+        public static IEnumerable<IEventSymbol> GetEvents(this INamedTypeSymbol item, bool staticEvents = false, bool includeInherited = true)
         {
-            var members = namedType.GetMembers();
+            var baseClassWithEvents = includeInherited ? item.GetBasesWithCondition(RoslynHelpers.HasEvents) : Array.Empty<INamedTypeSymbol>();
 
-            for (int memberIndex = 0; memberIndex < members.Length; memberIndex++)
+            var itemsToProcess = new Stack<INamedTypeSymbol>(new[] { item }.Concat(baseClassWithEvents));
+
+            while (itemsToProcess.Count != 0)
             {
-                var member = members[memberIndex];
+                var namedType = itemsToProcess.Pop();
 
-                if (member is IEventSymbol eventSymbol && eventSymbol.DeclaredAccessibility == Accessibility.Public)
+                var members = namedType.GetMembers();
+
+                for (int memberIndex = 0; memberIndex < members.Length; memberIndex++)
                 {
+                    var member = members[memberIndex];
+
+                    if (member is not IEventSymbol eventSymbol)
+                    {
+                        continue;
+                    }
+
+                    if (!staticEvents && eventSymbol.IsStatic)
+                    {
+                        continue;
+                    }
+
+                    if (staticEvents && !eventSymbol.IsStatic)
+                    {
+                        continue;
+                    }
+
+                    if (eventSymbol.DeclaredAccessibility != Accessibility.Public)
+                    {
+                        continue;
+                    }
+
+                    var invokeMethod = ((INamedTypeSymbol)eventSymbol.OriginalDefinition.Type).DelegateInvokeMethod;
+
+                    if (invokeMethod == null)
+                    {
+                        continue;
+                    }
+
+                    if (invokeMethod.ReturnType.SpecialType != SpecialType.System_Void)
+                    {
+                        continue;
+                    }
+
                     yield return eventSymbol;
                 }
             }
@@ -93,62 +141,23 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators
 
         public static TypeSyntax GenerateObservableType(this TypeArgumentListSyntax argumentList)
         {
-            return QualifiedName(IdentifierName("global::System"), GenericName(Identifier("IObservable")).WithTypeArgumentList(argumentList));
+            return QualifiedName(IdentifierName("global::System"), GenericName("IObservable").WithTypeArgumentList(argumentList));
         }
 
         public static TypeSyntax GenerateObservableType(this TypeSyntax argumentList)
         {
-            return QualifiedName(IdentifierName("global::System"), GenericName(Identifier("IObservable")).WithTypeArgumentList(TypeArgumentList(SingletonSeparatedList(argumentList))));
+            return QualifiedName(IdentifierName("global::System"), GenericName("IObservable", new[] { argumentList }));
         }
 
-        public static PropertyDeclarationSyntax WithObsoleteAttribute(this PropertyDeclarationSyntax syntax, ISymbol eventDetails)
-        {
-            var attribute = GenerateObsoleteAttributeList(eventDetails);
-
-            if (attribute == null)
-            {
-                return syntax;
-            }
-
-            return syntax.WithAttributeLists(SingletonList(attribute));
-        }
-
-        public static ClassDeclarationSyntax WithObsoleteAttribute(this ClassDeclarationSyntax syntax, ISymbol eventDetails)
-        {
-            var attribute = GenerateObsoleteAttributeList(eventDetails);
-
-            if (attribute == null)
-            {
-                return syntax;
-            }
-
-            return syntax.WithAttributeLists(SingletonList(attribute));
-        }
-
-        public static MethodDeclarationSyntax WithObsoleteAttribute(this MethodDeclarationSyntax syntax, ISymbol eventDetails)
-        {
-            var attribute = GenerateObsoleteAttributeList(eventDetails);
-
-            if (attribute == null)
-            {
-                return syntax;
-            }
-
-            return syntax.WithAttributeLists(SingletonList(attribute));
-        }
-
-        public static ParameterListSyntax GenerateMethodParameters(this IMethodSymbol method)
+        public static IReadOnlyList<ParameterSyntax> GenerateMethodParameters(this IMethodSymbol method)
         {
             if (method.Parameters.Length == 0)
             {
-                return ParameterList();
+                return Array.Empty<ParameterSyntax>();
             }
 
-            return ParameterList(
-                SeparatedList(
-                    method.Parameters.Select(
-                        x => Parameter(Identifier(x.Name.GetKeywordSafeName()))
-                            .WithType(IdentifierName(x.Type.GenerateFullGenericName())))));
+            return method.Parameters.Select(
+                        x => Parameter(x.Type.GenerateFullGenericName(), x.Name.GetKeywordSafeName())).ToList();
         }
 
         public static IEnumerable<T> GetBaseTypesAndThis<T>(this T type)
@@ -176,6 +185,11 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators
             }
         }
 
+        public static IReadOnlyList<TypeParameterSyntax> ToTypeParameters(this IEnumerable<INamedTypeSymbol> types)
+        {
+            return types.Select(x => TypeParameter(x.GenerateFullGenericName())).ToList();
+        }
+
         /// <summary>
         /// Gets a string form of the type and generic arguments for a type.
         /// </summary>
@@ -183,7 +197,7 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators
         /// <returns>A type descriptor including the generic arguments.</returns>
         public static string GenerateFullGenericName(this ITypeSymbol currentType)
         {
-            var (isBuiltIn, typeName) = GetBuiltInType(currentType.ToDisplayString(RoslynHelpers.SymbolDisplayFormat));
+            var (isBuiltIn, typeName) = GetBuiltInType(currentType.ToDisplayString(RoslynHelpers.TypeFormat));
             var sb = new StringBuilder(!isBuiltIn ? "global::" + typeName : typeName);
 
             return sb.ToString();
@@ -253,35 +267,6 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators
             }
 
             return (false, typeName);
-        }
-
-        /// <summary>
-        /// Gets information about the event's obsolete information if any.
-        /// </summary>
-        /// <param name="eventDetails">The event details.</param>
-        /// <returns>The event's obsolete information if there is any.</returns>
-        private static AttributeListSyntax? GenerateObsoleteAttributeList(ISymbol eventDetails)
-        {
-            var obsoleteAttribute = eventDetails.GetAttributes()
-                .FirstOrDefault(attr => attr.AttributeClass?.Name.Equals("System.ObsoleteAttribute", StringComparison.InvariantCulture) ?? false);
-
-            if (obsoleteAttribute == null)
-            {
-                return null;
-            }
-
-            var message = obsoleteAttribute.ConstructorArguments.FirstOrDefault().Value?.ToString();
-            var isError = bool.Parse(obsoleteAttribute.ConstructorArguments.ElementAtOrDefault(1).Value?.ToString() ?? bool.FalseString) ? SyntaxKind.TrueLiteralExpression : SyntaxKind.FalseLiteralExpression;
-
-            if (message != null && !string.IsNullOrWhiteSpace(message))
-            {
-                var attribute = Attribute(
-                    IdentifierName("global::System.ObsoleteAttribute"),
-                    AttributeArgumentList(SeparatedList(new[] { AttributeArgument(LiteralExpression(SyntaxKind.StringLiteralExpression, Literal(message))), AttributeArgument(LiteralExpression(isError)) })));
-                return AttributeList(SingletonSeparatedList(attribute));
-            }
-
-            return null;
         }
 
         private static string GetKeywordSafeName(this string name)
