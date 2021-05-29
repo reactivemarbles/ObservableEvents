@@ -69,30 +69,11 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators.Gener
                 yield break;
             }
 
-            var nonGenericProperties = new List<PropertyDeclarationSyntax>(events.Count);
-            var genericProperties = new Dictionary<TypeArguments, List<PropertyDeclarationSyntax>>(events.Count);
+            var properties = new List<PropertyDeclarationSyntax>(events.Count);
 
             for (int i = 0; i < events.Count; ++i)
             {
                 var eventSymbol = events[i];
-
-                var eventSymbolType = eventSymbol.Type as INamedTypeSymbol;
-
-                List<PropertyDeclarationSyntax> listToAdd;
-                if (eventSymbolType != null && eventSymbolType.TypeArguments.Length != 0)
-                {
-                    var typeArguments = new TypeArguments(eventSymbolType.TypeArguments.Cast<INamedTypeSymbol>().ToArray());
-
-                    if (!genericProperties.TryGetValue(typeArguments, out listToAdd))
-                    {
-                        listToAdd = new List<PropertyDeclarationSyntax>();
-                        genericProperties[typeArguments] = listToAdd;
-                    }
-                }
-                else
-                {
-                    listToAdd = nonGenericProperties;
-                }
 
                 var eventWrapper = GenerateEventWrapperObservable(eventSymbol, DataFieldName, null);
 
@@ -101,36 +82,19 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators.Gener
                     continue;
                 }
 
-                listToAdd.Add(eventWrapper);
+                properties.Add(eventWrapper);
             }
 
             var obsoleteList = RoslynHelpers.GenerateObsoleteAttributeList(typeDefinition);
 
-            if (nonGenericProperties.Count > 0)
+            if (properties.Count > 0)
             {
                 yield return ClassDeclaration(
                     "Rx" + typeDefinition.Name + "Events",
                     obsoleteList,
                     new[] { SyntaxKind.InternalKeyword },
-                    members.Concat(nonGenericProperties).ToList(),
+                    members.Concat(properties).ToList(),
                     1);
-            }
-
-            if (genericProperties.Count > 0)
-            {
-                foreach (var kvp in genericProperties)
-                {
-                    var types = kvp.Key.Types.ToTypeParameters();
-                    var values = kvp.Value;
-
-                    yield return ClassDeclaration(
-                        "Rx" + typeDefinition.Name + "Events",
-                        obsoleteList,
-                        new[] { SyntaxKind.InternalKeyword },
-                        members.Concat(values).ToList(),
-                        types,
-                        1);
-                }
             }
         }
 

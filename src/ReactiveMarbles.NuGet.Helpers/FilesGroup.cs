@@ -117,12 +117,7 @@ namespace ReactiveMarbles.NuGet.Helpers
             {
                 get
                 {
-                    if (Parent == null || string.IsNullOrWhiteSpace(Parent.FullPath))
-                    {
-                        return Name;
-                    }
-
-                    return Parent.FullPath + Path.DirectorySeparatorChar + Name;
+                    return Parent == null || string.IsNullOrWhiteSpace(Parent.FullPath) ? Name : Parent.FullPath + Path.DirectorySeparatorChar + Name;
                 }
             }
 
@@ -199,12 +194,7 @@ namespace ReactiveMarbles.NuGet.Helpers
                     return 0;
                 }
 
-                if (ReferenceEquals(null, other))
-                {
-                    return 1;
-                }
-
-                return StringComparer.InvariantCultureIgnoreCase.Compare(this, other);
+                return ReferenceEquals(null, other) ? 1 : StringComparer.InvariantCultureIgnoreCase.Compare(this, other);
             }
         }
 

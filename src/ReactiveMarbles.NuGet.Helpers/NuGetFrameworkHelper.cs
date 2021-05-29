@@ -40,7 +40,7 @@ namespace ReactiveMarbles.NuGet.Helpers
             _nugetFrameworks["NetStandard1.6"] = new[] { FrameworkConstants.CommonFrameworks.NetStandard16 };
             _nugetFrameworks["NetStandard1.7"] = new[] { FrameworkConstants.CommonFrameworks.NetStandard17 };
             _nugetFrameworks["NetStandard2.0"] = new[] { FrameworkConstants.CommonFrameworks.NetStandard20 };
-            _nugetFrameworks["NetStandard2.1"] = new[] { new NuGetFramework(".NETStandard", new Version(2, 1, 0, 0)) };
+            _nugetFrameworks["NetStandard2.1"] = new[] { FrameworkConstants.CommonFrameworks.NetStandard21 };
             _nugetFrameworks["UAP"] = new[] { FrameworkConstants.CommonFrameworks.UAP10 };
             _nugetFrameworks["UAP10.0"] = new[] { FrameworkConstants.CommonFrameworks.UAP10 };
             _nugetFrameworks["NetCoreApp1.0"] = new[] { FrameworkConstants.CommonFrameworks.NetCoreApp10 };
@@ -58,6 +58,8 @@ namespace ReactiveMarbles.NuGet.Helpers
             _nugetFrameworks["MonoAndroid80"] = new[] { new NuGetFramework("MonoAndroid", new Version(8, 0, 0, 0)), FrameworkConstants.CommonFrameworks.NetStandard20 };
             _nugetFrameworks["MonoAndroid81"] = new[] { new NuGetFramework("MonoAndroid", new Version(8, 1, 0, 0)), FrameworkConstants.CommonFrameworks.NetStandard20 };
             _nugetFrameworks["MonoAndroid90"] = new[] { new NuGetFramework("MonoAndroid", new Version(9, 0, 0, 0)), FrameworkConstants.CommonFrameworks.NetStandard20 };
+            _nugetFrameworks["MonoAndroid10.0"] = new[] { new NuGetFramework("MonoAndroid", new Version(10, 0, 0, 0)), FrameworkConstants.CommonFrameworks.NetStandard20 };
+            _nugetFrameworks["MonoAndroid11.0"] = new[] { new NuGetFramework("MonoAndroid", new Version(11, 0, 0, 0)), FrameworkConstants.CommonFrameworks.NetStandard20 };
             _nugetFrameworks["MonoTouch10"] = new[] { new NuGetFramework("MonoAndroid", new Version(1, 0, 0, 0)), FrameworkConstants.CommonFrameworks.NetStandard20 };
             _nugetFrameworks["Xamarin.iOS10"] = new[] { new NuGetFramework("Xamarin.iOS", new Version(1, 0, 0, 0)), FrameworkConstants.CommonFrameworks.NetStandard20 };
             _nugetFrameworks["Xamarin.Mac20"] = new[] { new NuGetFramework("Xamarin.Mac", new Version(2, 0, 0, 0)), FrameworkConstants.CommonFrameworks.NetStandard20 };
@@ -79,6 +81,7 @@ namespace ReactiveMarbles.NuGet.Helpers
             _nugetFrameworks["net471"] = new[] { new NuGetFramework(".NETFramework", new Version(4, 7, 1, 0)) };
             _nugetFrameworks["net472"] = new[] { new NuGetFramework(".NETFramework", new Version(4, 7, 2, 0)) };
             _nugetFrameworks["net48"] = new[] { new NuGetFramework(".NETFramework", new Version(4, 8, 0, 0)) };
+            _nugetFrameworks["net5.0"] = new[] { FrameworkConstants.CommonFrameworks.Net50 };
 
             _nugetFrameworks["uap10.0"] = new[] { FrameworkConstants.CommonFrameworks.UAP10, FrameworkConstants.CommonFrameworks.NetStandard20 };
             _nugetFrameworks["uap"] = new[] { FrameworkConstants.CommonFrameworks.UAP10, FrameworkConstants.CommonFrameworks.NetStandard20 };
@@ -121,24 +124,25 @@ namespace ReactiveMarbles.NuGet.Helpers
 
             if (framework.Framework.StartsWith(".NETStandard", StringComparison.OrdinalIgnoreCase))
             {
-                return new[] { new PackageIdentity("NETStandard.Library", new NuGetVersion(framework.Version)) };
+                return framework.Version >= new Version(2, 1, 0)
+                    ? new[] { new PackageIdentity("NETStandard.Library.Ref", new NuGetVersion(framework.Version)) }
+                    : new[] { new PackageIdentity("NETStandard.Library", new NuGetVersion(framework.Version)) };
             }
 
             if (framework.Framework.StartsWith(".NETCoreApp", StringComparison.OrdinalIgnoreCase))
             {
-                return new[] { new PackageIdentity("Microsoft.NETCore.App", new NuGetVersion(framework.Version)) };
+                return framework.Version > new Version(2, 2, 8) ?
+                    new[] { new PackageIdentity("Microsoft.NETCore.App.Ref", new NuGetVersion(framework.Version)) } :
+                    new[] { new PackageIdentity("Microsoft.NETCore.App", new NuGetVersion(framework.Version)) };
             }
 
-            if (framework.Framework.StartsWith("Tizen", StringComparison.OrdinalIgnoreCase))
+            if (framework.Framework.StartsWith("Tizen", StringComparison.OrdinalIgnoreCase) && framework.Version == new Version("4.0.0.0"))
             {
-                if (framework.Version == new Version("4.0.0.0"))
+                return new[]
                 {
-                    return new[]
-                           {
-                               new PackageIdentity("Tizen.NET.API4", new NuGetVersion("4.0.1.14152")),
-                               new PackageIdentity("NETStandard.Library", new NuGetVersion("2.0.0.0"))
-                           };
-                }
+                    new PackageIdentity("Tizen.NET.API4", new NuGetVersion("4.0.1.14152")),
+                    new PackageIdentity("NETStandard.Library", new NuGetVersion("2.0.0.0"))
+                };
             }
 
             if (framework.Framework.StartsWith(".NETFramework", StringComparison.OrdinalIgnoreCase))
@@ -151,12 +155,9 @@ namespace ReactiveMarbles.NuGet.Helpers
                 return new[] { new PackageIdentity("NETStandard.Library", new NuGetVersion("2.0.0.0")) };
             }
 
-            if (framework.Framework.StartsWith("Xamarin", StringComparison.OrdinalIgnoreCase))
-            {
-                return new[] { new PackageIdentity("NETStandard.Library", new NuGetVersion("2.0.0.0")) };
-            }
-
-            return Array.Empty<PackageIdentity>();
+            return framework.Framework.StartsWith("Xamarin", StringComparison.OrdinalIgnoreCase)
+                ? new[] { new PackageIdentity("NETStandard.Library", new NuGetVersion("2.0.0.0")) }
+                : Array.Empty<PackageIdentity>();
         }
     }
 }

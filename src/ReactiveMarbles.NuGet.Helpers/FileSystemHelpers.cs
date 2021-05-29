@@ -9,8 +9,17 @@ using System.Linq;
 
 namespace ReactiveMarbles.NuGet.Helpers
 {
-    internal static class FileSystemHelpers
+    /// <summary>
+    /// Helpers with the file system.
+    /// </summary>
+    public static class FileSystemHelpers
     {
+        /// <summary>
+        /// Gets the subdirectories with match.
+        /// </summary>
+        /// <param name="directories">The directories.</param>
+        /// <param name="extensions">The extensions.</param>
+        /// <returns>The subdirectories.</returns>
         public static IEnumerable<string> GetSubdirectoriesWithMatch(IEnumerable<string> directories, ISet<string> extensions)
         {
             var searchStack = new Stack<DirectoryInfo>(directories.Select(x => new DirectoryInfo(x)));
@@ -31,11 +40,22 @@ namespace ReactiveMarbles.NuGet.Helpers
             }
         }
 
+        /// <summary>
+        /// Gets the files within subdirectories.
+        /// </summary>
+        /// <param name="directories">The directories.</param>
+        /// <returns>The files.</returns>
         public static IEnumerable<string> GetFilesWithinSubdirectories(IEnumerable<string> directories)
         {
             return GetFilesWithinSubdirectories(directories, AssemblyHelpers.AssemblyFileExtensionsSet);
         }
 
+        /// <summary>
+        /// Gets the files within subdirectories.
+        /// </summary>
+        /// <param name="directories">The directories.</param>
+        /// <param name="extensions">The extensions.</param>
+        /// <returns>The files.</returns>
         public static IEnumerable<string> GetFilesWithinSubdirectories(IEnumerable<string> directories, ISet<string> extensions)
         {
             if (extensions == null)

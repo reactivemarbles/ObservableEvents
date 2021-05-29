@@ -92,6 +92,7 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators
 
             var itemsToProcess = new Stack<INamedTypeSymbol>(new[] { item }.Concat(baseClassWithEvents));
 
+            var processedItems = new HashSet<string>();
             while (itemsToProcess.Count != 0)
             {
                 var namedType = itemsToProcess.Pop();
@@ -106,6 +107,13 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators
                     {
                         continue;
                     }
+
+                    if (processedItems.Contains(member.Name))
+                    {
+                        continue;
+                    }
+
+                    processedItems.Add(member.Name);
 
                     if (!staticEvents && eventSymbol.IsStatic)
                     {
@@ -197,10 +205,7 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators
         /// <returns>A type descriptor including the generic arguments.</returns>
         public static string GenerateFullGenericName(this ITypeSymbol currentType)
         {
-            var (isBuiltIn, typeName) = GetBuiltInType(currentType.ToDisplayString(RoslynHelpers.TypeFormat));
-            var sb = new StringBuilder(!isBuiltIn ? "global::" + typeName : typeName);
-
-            return sb.ToString();
+            return currentType.ToDisplayString(RoslynHelpers.TypeFormat);
         }
 
         public static IEnumerable<INamedTypeSymbol> GetBasesWithCondition(this INamedTypeSymbol symbol, Func<INamedTypeSymbol, bool> condition)

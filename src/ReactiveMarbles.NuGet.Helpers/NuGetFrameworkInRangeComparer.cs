@@ -16,12 +16,7 @@ namespace ReactiveMarbles.NuGet.Helpers
         /// <inheritdoc />
         public bool Equals(NuGetFramework x, NuGetFramework y)
         {
-            if (!NuGetFramework.FrameworkNameComparer.Equals(x, y))
-            {
-                return false;
-            }
-
-            return x.Version >= y.Version;
+            return !NuGetFramework.FrameworkNameComparer.Equals(x, y) ? false : x.Version >= y.Version;
         }
 
         /// <inheritdoc />
@@ -35,12 +30,7 @@ namespace ReactiveMarbles.NuGet.Helpers
         {
             var result = StringComparer.OrdinalIgnoreCase.Compare(x.Framework, y.Framework);
 
-            if (result != 0)
-            {
-                return result;
-            }
-
-            return x.Version.CompareTo(y.Version);
+            return result != 0 ? result : x.Version.CompareTo(y.Version);
         }
     }
 }

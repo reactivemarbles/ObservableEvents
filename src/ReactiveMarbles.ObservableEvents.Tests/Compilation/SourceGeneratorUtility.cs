@@ -14,19 +14,13 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
 using ReactiveMarbles.ObservableEvents.SourceGenerator;
-
+using ReactiveMarbles.ObservableEvents.Tests.Compilation;
 using Xunit.Abstractions;
 
 namespace ReactiveMarbles.ObservableEvents.Tests
 {
     internal class SourceGeneratorUtility
     {
-        private static readonly Dictionary<string, MetadataReference> DomainAssemblyReferences =
-            AppDomain.CurrentDomain.GetAssemblies().Where(x => !x.IsDynamic).Distinct(AssemblyEqualityComparer.Default).ToDictionary(x => x.FullName, x => (MetadataReference)MetadataReference.CreateFromFile(x.Location));
-
-        private static readonly Dictionary<string, Assembly> DomainAssemblies =
-            AppDomain.CurrentDomain.GetAssemblies().Distinct(AssemblyEqualityComparer.Default).ToDictionary(x => x.FullName);
-
         private static readonly MetadataReference[] SystemAssemblyReferences;
         private ITestOutputHelper _testOutputHelper;
 
@@ -36,6 +30,11 @@ namespace ReactiveMarbles.ObservableEvents.Tests
 
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
+                if (assembly.FullName is null)
+                {
+                    continue;
+                }
+
                 if (!assembly.FullName.StartsWith("System") && !assembly.FullName.StartsWith("mscordlib") && !assembly.FullName.StartsWith("netstandard"))
                 {
                     continue;
@@ -46,7 +45,7 @@ namespace ReactiveMarbles.ObservableEvents.Tests
                     continue;
                 }
 
-                assemblies.Add(DomainAssemblyReferences[assembly.FullName]);
+                assemblies.Add(MetadataReference.CreateFromFile(assembly.Location));
             }
 
             SystemAssemblyReferences = assemblies.ToArray();
@@ -57,9 +56,9 @@ namespace ReactiveMarbles.ObservableEvents.Tests
             _testOutputHelper = testOutputHelper;
         }
 
-        public void RunGenerator(Type[] types, out ImmutableArray<Diagnostic> compilationDiagnostics, out ImmutableArray<Diagnostic> generatorDiagnostics, params string[] sources)
+        public void RunGenerator(EventBuilderCompiler compiler, out ImmutableArray<Diagnostic> compilationDiagnostics, out ImmutableArray<Diagnostic> generatorDiagnostics, params string[] sources)
         {
-            var compilation = CreateCompilation(types, sources);
+            var compilation = CreateCompilation(compiler, sources);
 
             var newCompilation = RunGenerators(compilation, out generatorDiagnostics, new EventGenerator());
 
@@ -69,26 +68,20 @@ namespace ReactiveMarbles.ObservableEvents.Tests
             ShouldHaveNoCompilerDiagnosticsWarningOrAbove(_testOutputHelper, compilation, generatorDiagnostics);
         }
 
-        private static void ShouldHaveNoCompilerDiagnosticsWarningOrAbove(ITestOutputHelper output, Compilation compilation, IEnumerable<Diagnostic> diagnostics)
+        private static void ShouldHaveNoCompilerDiagnosticsWarningOrAbove(ITestOutputHelper output, Microsoft.CodeAnalysis.Compilation compilation, IEnumerable<Diagnostic> diagnostics)
         {
-            var compilationErrors = diagnostics.Where(x => x.Severity >= DiagnosticSeverity.Warning).Select(x => $"{x.Location.SourceTree.FilePath} ({x.Location.GetLineSpan().StartLinePosition}): {x.GetMessage()}{Environment.NewLine}").ToList();
+            var compilationErrors = diagnostics.Where(x => x.Severity >= DiagnosticSeverity.Warning).Select(x => $"// {x.Location.SourceTree?.FilePath} ({x.Location.GetLineSpan().StartLinePosition}): {x.GetMessage()}{Environment.NewLine}").ToList();
 
             var outputSources = string.Join(Environment.NewLine, compilation.SyntaxTrees.Select(x => $"// {x.FilePath}:{Environment.NewLine}{x}").Where(x => !x.Contains("The impementation should have been generated.")));
 
             if (compilationErrors.Count > 0)
             {
                 output.WriteLine(outputSources);
-                throw new InvalidOperationException(string.Join('\n', compilationErrors));
+                throw new InvalidOperationException(string.Join(Environment.NewLine, compilationErrors));
             }
         }
 
-        /// <summary>
-        /// Creates a compilation.
-        /// </summary>
-        /// <param name="types">The types to include.</param>
-        /// <param name="sources">The source code to include.</param>
-        /// <returns>The created compilation.</returns>
-        private static Compilation CreateCompilation(Type[] types, params string[] sources)
+        private static Microsoft.CodeAnalysis.Compilation CreateCompilation(EventBuilderCompiler compiler, params string[] sources)
         {
             var assemblyPath = Path.GetDirectoryName(typeof(object).Assembly.Location);
 
@@ -98,46 +91,15 @@ namespace ReactiveMarbles.ObservableEvents.Tests
             }
 
             var assemblies = new HashSet<MetadataReference>();
-            var processingStack = new Queue<Assembly>(types.Select(type => type.GetTypeInfo().Assembly));
 
-            while (processingStack.Count != 0)
-            {
-                var assembly = processingStack.Dequeue();
-
-                if (assembly.IsDynamic)
-                {
-                    continue;
-                }
-
-                var assemblyReference = DomainAssemblyReferences[assembly.FullName];
-
-                if (assemblies.Contains(assemblyReference))
-                {
-                    continue;
-                }
-
-                assemblies.Add(assemblyReference);
-
-                foreach (var referencedAssemblyLocation in assembly.GetReferencedAssemblies())
-                {
-                    if (!DomainAssemblies.TryGetValue(referencedAssemblyLocation.FullName, out var referencedAssembly))
-                    {
-                        continue;
-                    }
-
-                    if (referencedAssembly == null)
-                    {
-                        continue;
-                    }
-
-                    processingStack.Enqueue(referencedAssembly);
-                }
-            }
+            assemblies.UnionWith(compiler.Modules.Where(x => x.PEFile is not null).Select(x => MetadataReference.CreateFromFile(x.PEFile!.FileName)));
+            assemblies.UnionWith(compiler.ReferencedModules.Where(x => x.PEFile is not null).Select(x => MetadataReference.CreateFromFile(x.PEFile!.FileName)));
+            assemblies.UnionWith(compiler.NeededModules.Where(x => x.PEFile is not null).Select(x => MetadataReference.CreateFromFile(x.PEFile!.FileName)));
 
             return CSharpCompilation.Create(
                 assemblyName: "compilation" + Guid.NewGuid(),
                 syntaxTrees: sources.Select(x => CSharpSyntaxTree.ParseText(x, new CSharpParseOptions(LanguageVersion.Latest))),
-                references: assemblies.Concat(SystemAssemblyReferences),
+                references: assemblies,
                 options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, deterministic: true));
         }
 
@@ -148,13 +110,13 @@ namespace ReactiveMarbles.ObservableEvents.Tests
         /// <param name="diagnostics">The resulting diagnostics.</param>
         /// <param name="generators">The generators to include in the compilation.</param>
         /// <returns>The new compilation after the generators have executed.</returns>
-        private static Compilation RunGenerators(Compilation compilation, out ImmutableArray<Diagnostic> diagnostics, params ISourceGenerator[] generators)
+        private static Microsoft.CodeAnalysis.Compilation RunGenerators(Microsoft.CodeAnalysis.Compilation compilation, out ImmutableArray<Diagnostic> diagnostics, params ISourceGenerator[] generators)
         {
             CreateDriver(compilation, generators).RunGeneratorsAndUpdateCompilation(compilation, out var outputCompilation, out diagnostics);
             return outputCompilation;
         }
 
-        private static GeneratorDriver CreateDriver(Compilation compilation, params ISourceGenerator[] generators) =>
+        private static GeneratorDriver CreateDriver(Microsoft.CodeAnalysis.Compilation compilation, params ISourceGenerator[] generators) =>
             CSharpGeneratorDriver.Create(
                 generators: ImmutableArray.Create(generators),
                 additionalTexts: ImmutableArray<AdditionalText>.Empty,

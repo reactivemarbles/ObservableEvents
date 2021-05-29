@@ -10,13 +10,13 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-
 using NuGet.Frameworks;
 using NuGet.Packaging;
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
+using ReactiveMarbles.NuGet.Helpers;
 
-namespace ReactiveMarbles.NuGet.Helpers
+namespace ReactiveMarbles.ObservableEvents.Tests
 {
     /// <summary>
     /// Implements the reference locations for windows builds.

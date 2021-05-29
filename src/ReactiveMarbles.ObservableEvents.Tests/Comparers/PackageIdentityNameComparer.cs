@@ -4,19 +4,28 @@
 
 using System;
 using System.Collections.Generic;
-
 using NuGet.Packaging.Core;
 
-namespace ReactiveMarbles.NuGet.Helpers
+namespace ReactiveMarbles.ObservableEvents.Tests.Comparers
 {
     internal class PackageIdentityNameComparer : IEqualityComparer<PackageIdentity>
     {
-        public static PackageIdentityNameComparer Default { get; } = new PackageIdentityNameComparer();
+        public static PackageIdentityNameComparer Default { get; } = new();
 
         /// <inheritdoc />
-        public bool Equals(PackageIdentity x, PackageIdentity y)
+        public bool Equals(PackageIdentity? x, PackageIdentity? y)
         {
-            return x == y ? true : StringComparer.OrdinalIgnoreCase.Equals(x?.Id, y?.Id);
+            if (x == null && y == null)
+            {
+                return true;
+            }
+
+            if (x == null || y == null)
+            {
+                return false;
+            }
+
+            return ReferenceEquals(x, y) || StringComparer.OrdinalIgnoreCase.Equals(x.Id, y.Id);
         }
 
         /// <inheritdoc />

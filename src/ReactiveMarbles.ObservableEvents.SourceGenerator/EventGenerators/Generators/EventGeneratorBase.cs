@@ -59,7 +59,7 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators.Gener
             IReadOnlyCollection<ArgumentSyntax> methodParametersArgumentList;
             TypeSyntax eventArgsType;
 
-            var invokeMethod = ((INamedTypeSymbol)eventSymbol.OriginalDefinition.Type).DelegateInvokeMethod;
+            var invokeMethod = ((INamedTypeSymbol)eventSymbol.Type).DelegateInvokeMethod;
 
             if (invokeMethod == null)
             {

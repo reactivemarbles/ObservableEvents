@@ -58,7 +58,7 @@ namespace ReactiveMarbles.NuGet.Helpers
         /// <summary>
         /// Downloads the specified packages and returns the files and directories where the package NuGet package lives.
         /// </summary>
-        /// <param name="libraryIdentities">Library identities we want to match.</param>
+        /// <param name="library">Library identity we want to match.</param>
         /// <param name="frameworks">Optional framework parameter which will force NuGet to evaluate as the specified Framework. If null it will use .NET Standard 2.0.</param>
         /// <param name="nugetSource">Optional v3 nuget source. Will default to default nuget.org servers.</param>
         /// <param name="getDependencies">If we should get the dependencies.</param>
@@ -66,6 +66,27 @@ namespace ReactiveMarbles.NuGet.Helpers
         /// <param name="packageOutputDirectory">A directory where to store the files, if null a random location will be used.</param>
         /// <param name="token">A cancellation token.</param>
         /// <returns>The directory where the NuGet packages are unzipped to. Also the files contained within the requested package only.</returns>
+        public static Task<InputAssembliesGroup> DownloadPackageFilesAndFolder(
+            LibraryRange library,
+            IReadOnlyCollection<NuGetFramework>? frameworks = null,
+            PackageSource? nugetSource = null,
+            bool getDependencies = true,
+            IReadOnlyCollection<string>? packageFolders = null,
+            string? packageOutputDirectory = null,
+            CancellationToken token = default) =>
+            DownloadPackageFilesAndFolder(new LibraryRange[] { library }, frameworks, nugetSource, getDependencies, packageFolders, packageOutputDirectory, token);
+
+            /// <summary>
+            /// Downloads the specified packages and returns the files and directories where the package NuGet package lives.
+            /// </summary>
+            /// <param name="libraryIdentities">Library identities we want to match.</param>
+            /// <param name="frameworks">Optional framework parameter which will force NuGet to evaluate as the specified Framework. If null it will use .NET Standard 2.0.</param>
+            /// <param name="nugetSource">Optional v3 nuget source. Will default to default nuget.org servers.</param>
+            /// <param name="getDependencies">If we should get the dependencies.</param>
+            /// <param name="packageFolders">Directories to package folders. Will be lib/build/ref if not defined.</param>
+            /// <param name="packageOutputDirectory">A directory where to store the files, if null a random location will be used.</param>
+            /// <param name="token">A cancellation token.</param>
+            /// <returns>The directory where the NuGet packages are unzipped to. Also the files contained within the requested package only.</returns>
         public static async Task<InputAssembliesGroup> DownloadPackageFilesAndFolder(
             IReadOnlyCollection<LibraryRange> libraryIdentities,
             IReadOnlyCollection<NuGetFramework>? frameworks = null,
@@ -117,7 +138,9 @@ namespace ReactiveMarbles.NuGet.Helpers
 
             var downloadResource = await sourceRepository.GetResourceAsync<DownloadResource>(token).ConfigureAwait(false);
 
-            return await DownloadPackageFilesAndFolder(packageIdentities, frameworks, downloadResource, getDependencies, packageFolders, packageOutputDirectory, token).ConfigureAwait(false);
+            return downloadResource is null
+                ? throw new InvalidOperationException("Could not find a valid package to download.")
+                : await DownloadPackageFilesAndFolder(packageIdentities, frameworks, downloadResource, getDependencies, packageFolders, packageOutputDirectory, token).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -198,11 +221,16 @@ namespace ReactiveMarbles.NuGet.Helpers
 
         private static async Task<IReadOnlyCollection<(DownloadResourceResult DownloadResourceResult, PackageIdentity PackageIdentity, bool IncludeFilesInOutput)>> GetPackagesToCopy(
             IReadOnlyCollection<PackageIdentity> startingPackages,
-            DownloadResource? downloadResource,
+            DownloadResource downloadResource,
             IReadOnlyCollection<NuGetFramework> frameworks,
             bool getDependencies,
             CancellationToken token)
         {
+            if (downloadResource is null)
+            {
+                throw new ArgumentNullException(nameof(downloadResource));
+            }
+
             var packagesToCopy = new Dictionary<PackageIdentity, (DownloadResourceResult DownloadResourceResult, PackageIdentity PackageIdentity, bool IncludeFilesInOutput)>(PackageIdentityNameComparer.Default);
 
             var stack = new Stack<(PackageIdentity PackageIdentity, bool Include)>(startingPackages.Select(x => (x, true)));
@@ -222,21 +250,13 @@ namespace ReactiveMarbles.NuGet.Helpers
                 var count = stack.TryPopRange(processingItems);
 
                 var currentItems = processingItems.Take(count).Where(
-                    item =>
-                    {
-                        if (packagesToCopy.TryGetValue(item.PackageIdentity, out var existingValue) && item.PackageIdentity.Version <= existingValue.PackageIdentity.Version)
-                        {
-                            return false;
-                        }
-
-                        return true;
-                    }).ToList();
+                    item => !packagesToCopy.TryGetValue(item.PackageIdentity, out var existingValue) || item.PackageIdentity.Version > existingValue.PackageIdentity.Version).ToList();
 
                 // Download the resource into the global packages path. We get a result which allows us to copy or do other operations based on the files.
-                (DownloadResourceResult DownloadResourceResult, PackageIdentity PackageIdentity, bool IncludeFilesInOutput)[] results = await Task.WhenAll(
+                var results = await Task.WhenAll(
                          currentItems.Select(
                              async item =>
-                                 (await downloadResource.GetDownloadResourceResultAsync(item.PackageIdentity, _downloadContext, _globalPackagesPath, _logger, token).ConfigureAwait(false), item.PackageIdentity, item.IncludeFiles))).ConfigureAwait(false);
+                                 (DownloadResourceResult: await downloadResource.GetDownloadResourceResultAsync(item.PackageIdentity, _downloadContext, _globalPackagesPath, _logger, token).ConfigureAwait(false), PackageIdentity: item.PackageIdentity, IncludeFilesInOutput: item.IncludeFiles))).ConfigureAwait(false);
 
                 foreach (var item in results.Where(x => x.DownloadResourceResult.Status == DownloadResourceResultStatus.Available || x.DownloadResourceResult.Status == DownloadResourceResultStatus.AvailableWithoutStream))
                 {
@@ -324,12 +344,9 @@ namespace ReactiveMarbles.NuGet.Helpers
                 .FirstOrDefault();
 
             // If no packages match our framework just return an empty array.
-            if (highestFramework == null)
-            {
-                return Array.Empty<PackageIdentity>();
-            }
-
-            return highestFramework.Packages.Select(package => new PackageIdentity(package.Id, package.VersionRange.MinVersion));
+            return highestFramework == null
+                ? Array.Empty<PackageIdentity>()
+                : highestFramework.Packages.Select(package => new PackageIdentity(package.Id, package.VersionRange.MinVersion));
         }
 
         private static IEnumerable<(string Folder, IEnumerable<string> Files)> GetFileGroups(this PackageReaderBase reader, IReadOnlyCollection<string> folders, IReadOnlyCollection<NuGetFramework> frameworksToInclude)
