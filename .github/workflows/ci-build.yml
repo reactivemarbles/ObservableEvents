@@ -47,7 +47,7 @@ jobs:
       working-directory: src
       
     - name: Build
-      run: dotnet --configuration=${{ env.configuration }} --verbosity=minimal --no-restore
+      run: dotnet build --configuration=${{ env.configuration }} --verbosity=minimal --no-restore
       working-directory: src
 
     - name: Run Unit Tests and Generate Coverage
