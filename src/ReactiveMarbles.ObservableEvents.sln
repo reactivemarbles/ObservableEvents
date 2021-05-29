@@ -9,17 +9,21 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReactiveMarbles.ObservableE
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{BE609799-D47F-4A3B-9424-AFE67294D6C1}"
 	ProjectSection(SolutionItems) = preProject
-		analyzers.ruleset = analyzers.ruleset
+		..\.editorconfig = ..\.editorconfig
+		..\.gitignore = ..\.gitignore
 		Directory.Build.props = Directory.Build.props
 		Directory.build.targets = Directory.build.targets
+		..\LICENSE = ..\LICENSE
+		..\README.md = ..\README.md
 		stylecop.json = stylecop.json
+		..\version.json = ..\version.json
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TesterConsoleApp", "TesterConsoleApp\TesterConsoleApp.csproj", "{26A42A2C-668F-42E6-AC32-CBE740100F92}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReactiveMarbles.ObservableEvents.Tests", "ReactiveMarbles.ObservableEvents.Tests\ReactiveMarbles.ObservableEvents.Tests.csproj", "{F5EC30AD-DC77-4985-9649-E6C2FA97DD5A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactiveMarbles.NuGet.Helpers", "ReactiveMarbles.NuGet.Helpers\ReactiveMarbles.NuGet.Helpers.csproj", "{8898C386-7835-487A-BAF1-07FCAC27ADF5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReactiveMarbles.NuGet.Helpers", "ReactiveMarbles.NuGet.Helpers\ReactiveMarbles.NuGet.Helpers.csproj", "{8898C386-7835-487A-BAF1-07FCAC27ADF5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

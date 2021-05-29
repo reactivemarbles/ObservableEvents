@@ -1,5 +1,5 @@
-﻿// Copyright (c) 2020 ReactiveUI Association Inc. All rights reserved.
-// ReactiveUI Association Inc licenses this file to you under the MIT license.
+﻿// Copyright (c) 2019-2021 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System;
@@ -23,9 +23,9 @@ namespace ReactiveMarbles.NuGet.Helpers
     /// </summary>
     public static class ReferenceLocator
     {
-        private static readonly PackageIdentity VSWherePackageIdentity = new PackageIdentity("VSWhere", new NuGetVersion("2.6.7"));
+        private static readonly PackageIdentity VSWherePackageIdentity = new("VSWhere", new NuGetVersion("2.6.7"));
 
-        private static readonly ConcurrentDictionary<bool, string> _windowsInstallationDirectory = new ConcurrentDictionary<bool, string>();
+        private static readonly ConcurrentDictionary<bool, string> _windowsInstallationDirectory = new();
 
         /// <summary>
         /// Gets the reference location.
@@ -39,14 +39,16 @@ namespace ReactiveMarbles.NuGet.Helpers
                 return "/Library/Frameworks";
             }
 
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                var visualStudioInstallation = GetWindowsInstallationDirectory(includePreRelease);
-
-                return Path.Combine(visualStudioInstallation, "Common7", "IDE", "ReferenceAssemblies", "Microsoft", "Framework");
+                throw new InvalidOperationException(
+                    "Visual Studio reference location not supported on this platform: "
+                    + RuntimeInformation.OSDescription);
             }
 
-            throw new ReferenceLocationNotFoundException("Visual Studio reference location not supported on this platform: " + RuntimeInformation.OSDescription);
+            var visualStudioInstallation = GetWindowsInstallationDirectory(includePreRelease);
+
+            return Path.Combine(visualStudioInstallation, "Common7", "IDE", "ReferenceAssemblies", "Microsoft", "Framework");
         }
 
         private static string GetWindowsInstallationDirectory(bool includePreRelease)
@@ -78,21 +80,24 @@ namespace ReactiveMarbles.NuGet.Helpers
                                 parameters.Append(" -prerelease");
                             }
 
-                            using (var process = new Process())
-                            {
-                                process.StartInfo.FileName = fileName;
-                                process.StartInfo.Arguments = parameters.ToString();
-                                process.StartInfo.UseShellExecute = false;
-                                process.StartInfo.RedirectStandardOutput = true;
+                            using var process = new Process
+                                                {
+                                                    StartInfo =
+                                                    {
+                                                        FileName = fileName,
+                                                        Arguments = parameters.ToString(),
+                                                        UseShellExecute = false,
+                                                        RedirectStandardOutput = true
+                                                    }
+                                                };
 
-                                process.Start();
+                            process.Start();
 
-                                // To avoid deadlocks, always read the output stream first and then wait.
-                                var output = process.StandardOutput.ReadToEnd().Replace(Environment.NewLine, string.Empty);
-                                process.WaitForExit();
+                            // To avoid deadlocks, always read the output stream first and then wait.
+                            var output = (await process.StandardOutput.ReadToEndAsync().ConfigureAwait(false)).Replace(Environment.NewLine, string.Empty);
+                            process.WaitForExit();
 
-                                return output;
-                            }
+                            return output;
                         }).ConfigureAwait(false).GetAwaiter().GetResult();
                 });
         }

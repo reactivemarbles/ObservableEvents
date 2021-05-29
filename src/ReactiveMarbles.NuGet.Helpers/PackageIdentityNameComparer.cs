@@ -1,5 +1,5 @@
-﻿// Copyright (c) 2020 ReactiveUI Association Inc. All rights reserved.
-// ReactiveUI Association Inc licenses this file to you under the MIT license.
+﻿// Copyright (c) 2019-2021 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System;
@@ -16,12 +16,7 @@ namespace ReactiveMarbles.NuGet.Helpers
         /// <inheritdoc />
         public bool Equals(PackageIdentity x, PackageIdentity y)
         {
-            if (x == y)
-            {
-                return true;
-            }
-
-            return StringComparer.OrdinalIgnoreCase.Equals(x?.Id, y?.Id);
+            return x == y ? true : StringComparer.OrdinalIgnoreCase.Equals(x?.Id, y?.Id);
         }
 
         /// <inheritdoc />

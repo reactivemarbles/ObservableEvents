@@ -1,5 +1,5 @@
-﻿// Copyright (c) 2020 ReactiveUI Association Inc. All rights reserved.
-// ReactiveUI Association Inc licenses this file to you under the MIT license.
+﻿// Copyright (c) 2019-2021 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System;
@@ -16,12 +16,7 @@ namespace ReactiveMarbles.NuGet.Helpers
         /// <inheritdoc />
         public bool Equals(NuGetFramework x, NuGetFramework y)
         {
-            if (!NuGetFramework.FrameworkNameComparer.Equals(x, y))
-            {
-                return false;
-            }
-
-            return x.Version >= y.Version;
+            return !NuGetFramework.FrameworkNameComparer.Equals(x, y) ? false : x.Version >= y.Version;
         }
 
         /// <inheritdoc />
@@ -35,12 +30,7 @@ namespace ReactiveMarbles.NuGet.Helpers
         {
             var result = StringComparer.OrdinalIgnoreCase.Compare(x.Framework, y.Framework);
 
-            if (result != 0)
-            {
-                return result;
-            }
-
-            return x.Version.CompareTo(y.Version);
+            return result != 0 ? result : x.Version.CompareTo(y.Version);
         }
     }
 }

@@ -1,5 +1,5 @@
-﻿// Copyright (c) 2020 ReactiveUI Association Inc. All rights reserved.
-// ReactiveUI Association Inc licenses this file to you under the MIT license.
+﻿// Copyright (c) 2019-2021 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System;
@@ -11,7 +11,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
+using static ReactiveMarbles.ObservableEvents.SourceGenerator.SyntaxFactoryHelpers;
 
 namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators.Generators
 {
@@ -20,74 +20,61 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators.Gener
         private const string DataFieldName = "_data";
 
         /// <inheritdoc />
-        public override NamespaceDeclarationSyntax? Generate(INamedTypeSymbol item, bool generateEmpty)
+        public override NamespaceDeclarationSyntax? Generate(INamedTypeSymbol item)
         {
             var namespaceName = item.ContainingNamespace.ToDisplayString(RoslynHelpers.SymbolDisplayFormat);
 
-            var eventWrapper = GenerateEventWrapperClass(item, item.GetEvents().ToArray(), generateEmpty);
+            var eventWrapperes = GenerateEventWrapperClasses(item, item.GetEvents().ToArray()).ToList();
 
-            if (eventWrapper != null)
+            if (eventWrapperes.Count > 0)
             {
-               return NamespaceDeclaration(IdentifierName(namespaceName))
-                    .WithMembers(SingletonList<MemberDeclarationSyntax>(eventWrapper));
+               return NamespaceDeclaration(namespaceName, eventWrapperes, true);
             }
 
             return null;
         }
 
-        private static ConstructorDeclarationSyntax GenerateEventWrapperClassConstructor(INamedTypeSymbol typeDefinition, bool hasBaseClass)
+        private static ConstructorDeclarationSyntax GenerateEventWrapperClassConstructor(INamedTypeSymbol typeDefinition)
         {
             const string dataParameterName = "data";
             string className = "Rx" + typeDefinition.Name + "Events";
-            var constructor = ConstructorDeclaration(
-                    Identifier(className))
-                .WithModifiers(
-                    TokenList(
-                        Token(SyntaxKind.PublicKeyword)))
-                .WithParameterList(
-                    ParameterList(
-                        SingletonSeparatedList(
-                            Parameter(
-                                    Identifier(dataParameterName))
-                                .WithType(
-                                    IdentifierName(typeDefinition.GenerateFullGenericName())))))
-                .WithBody(
-                    Block(
-                        SingletonList(
-                            ExpressionStatement(
-                                AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, IdentifierName(DataFieldName), IdentifierName("data"))))))
+
+            var constructorBlock = Block(
+                new[]
+                {
+                    ExpressionStatement(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, DataFieldName, "data"))
+                },
+                2);
+
+            return ConstructorDeclaration(default, new[] { SyntaxKind.PublicKeyword }, new[] { Parameter(typeDefinition.GenerateFullGenericName(), dataParameterName) }, className, constructorBlock, 1)
                 .WithLeadingTrivia(
                     XmlSyntaxFactory.GenerateSummarySeeAlsoComment("Initializes a new instance of the {0} class.", className, (dataParameterName, "The class that is being wrapped.")));
-
-            if (hasBaseClass)
-            {
-                constructor = constructor.WithInitializer(ConstructorInitializer(SyntaxKind.BaseConstructorInitializer, ArgumentList(SingletonSeparatedList(Argument(IdentifierName(dataParameterName))))));
-            }
-
-            return constructor;
         }
 
         private static FieldDeclarationSyntax GenerateEventWrapperField(INamedTypeSymbol typeDefinition)
         {
-            return FieldDeclaration(VariableDeclaration(IdentifierName(typeDefinition.GenerateFullGenericName()))
-                .WithVariables(SingletonSeparatedList(VariableDeclarator(Identifier(DataFieldName)))))
-                .WithModifiers(TokenList(Token(SyntaxKind.PrivateKeyword), Token(SyntaxKind.ReadOnlyKeyword)));
+            return FieldDeclaration(
+                typeDefinition.GenerateFullGenericName(),
+                DataFieldName,
+                new[] { SyntaxKind.PrivateKeyword, SyntaxKind.ReadOnlyKeyword },
+                1);
         }
 
-        private static ClassDeclarationSyntax? GenerateEventWrapperClass(INamedTypeSymbol typeDefinition, IReadOnlyList<IEventSymbol> events, bool generateAlways)
+        private static IEnumerable<ClassDeclarationSyntax> GenerateEventWrapperClasses(INamedTypeSymbol typeDefinition, IReadOnlyList<IEventSymbol> events)
         {
-            var baseTypeDefinition = typeDefinition.GetBasesWithCondition(RoslynHelpers.HasEvents).FirstOrDefault();
+            var members = new List<MemberDeclarationSyntax> { GenerateEventWrapperField(typeDefinition), GenerateEventWrapperClassConstructor(typeDefinition) };
 
-            var members = new List<MemberDeclarationSyntax> { GenerateEventWrapperField(typeDefinition), GenerateEventWrapperClassConstructor(typeDefinition, baseTypeDefinition != null) };
-
-            if (!generateAlways && events.Count == 0)
+            if (events.Count == 0)
             {
-                return null;
+                yield break;
             }
+
+            var properties = new List<PropertyDeclarationSyntax>(events.Count);
 
             for (int i = 0; i < events.Count; ++i)
             {
                 var eventSymbol = events[i];
+
                 var eventWrapper = GenerateEventWrapperObservable(eventSymbol, DataFieldName, null);
 
                 if (eventWrapper == null)
@@ -95,21 +82,65 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators.Gener
                     continue;
                 }
 
-                members.Add(eventWrapper);
+                properties.Add(eventWrapper);
             }
 
-            var classDeclaration = ClassDeclaration("Rx" + typeDefinition.Name + "Events")
-                .WithModifiers(TokenList(Token(SyntaxKind.InternalKeyword)))
-                .WithMembers(List(members))
-                .WithObsoleteAttribute(typeDefinition)
-                .WithLeadingTrivia(XmlSyntaxFactory.GenerateSummarySeeAlsoComment("A class which wraps the events contained within the {0} class as observables.", typeDefinition.GetArityDisplayName()));
+            var obsoleteList = RoslynHelpers.GenerateObsoleteAttributeList(typeDefinition);
 
-            if (baseTypeDefinition != null)
+            if (properties.Count > 0)
             {
-                classDeclaration = classDeclaration.WithBaseList(BaseList(SingletonSeparatedList<BaseTypeSyntax>(SimpleBaseType(IdentifierName($"global::{baseTypeDefinition.ContainingNamespace.ToDisplayString(RoslynHelpers.SymbolDisplayFormat)}.Rx{baseTypeDefinition.Name}Events")))));
+                yield return ClassDeclaration(
+                    "Rx" + typeDefinition.Name + "Events",
+                    obsoleteList,
+                    new[] { SyntaxKind.InternalKeyword },
+                    members.Concat(properties).ToList(),
+                    1);
+            }
+        }
+
+        private class TypeArguments : IEquatable<TypeArguments>
+        {
+            public TypeArguments(INamedTypeSymbol[] typeArguments) => Types = typeArguments;
+
+            public INamedTypeSymbol[] Types { get; }
+
+            public bool Equals(TypeArguments other)
+            {
+                if (other is null)
+                {
+                    return false;
+                }
+
+                if (other.Types.Length != Types.Length)
+                {
+                    return false;
+                }
+
+                for (int i = 0; i < Types.Length; ++i)
+                {
+                    if (!TypeNameComparer.Default.Equals(Types[i], other.Types[i]))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
             }
 
-            return classDeclaration;
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    int result = 0;
+
+                    foreach (var item in Types)
+                    {
+                        result = (result * 397) ^ TypeNameComparer.Default.GetHashCode(item);
+                    }
+
+                    return result;
+                }
+            }
         }
     }
 }
