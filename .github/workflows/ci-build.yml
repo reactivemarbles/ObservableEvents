@@ -61,6 +61,10 @@ jobs:
         output: '../../artifacts/'
         configuration: ${{ env.configuration }}
 
+    - name: Pack
+      run: dotnet pack --configuration=${{ env.configuration }} --verbosity=minimal --no-restore
+      working-directory: src
+
     - name: Upload Code Coverage
       shell: bash
       run: |
