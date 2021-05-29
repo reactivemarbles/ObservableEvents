@@ -1,3 +1,16 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches: [ main ]
+
+env:
+  configuration: Release
+  productNamespacePrefix: "ReactiveMarbles"
+
 jobs:
   build:
     runs-on: windows-latest
