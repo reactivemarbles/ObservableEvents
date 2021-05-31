@@ -150,7 +150,7 @@ namespace ReactiveMarbles.NuGet.Helpers
         /// <param name="nugetSource">Optional v3 nuget source. Will default to default nuget.org servers.</param>
         /// <param name="token">A optional cancellation token.</param>
         /// <returns>The best matching PackageIdentity to the specified version range.</returns>
-        public static async Task<PackageIdentity> GetBestMatch(LibraryRange identity, PackageSource nugetSource = null, CancellationToken token = default)
+        public static async Task<PackageIdentity> GetBestMatch(LibraryRange identity, PackageSource? nugetSource = null, CancellationToken token = default)
         {
             if (identity == null)
             {
