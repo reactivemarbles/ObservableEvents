@@ -8,12 +8,12 @@
     <Authors>Glenn Watson</Authors>
     <Copyright>Copyright (c) 2021 ReactiveUI Association Inc</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/reactivemarbles/PropertyChanged</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/reactivemarbles/ObservableEvents</PackageProjectUrl>
     <PackageDescription>Allows to get an observables for property changed events.</PackageDescription>
     <Owners>glennawatson</Owners>
     <PackageTags>system.reactive;propertychanged;inpc;reactive;functional</PackageTags>
-    <PackageReleaseNotes>https://github.com/reactivemarbles/PropertyChanged/releases</PackageReleaseNotes>
-    <RepositoryUrl>https://github.com/reactivemarbles/PropertyChanged</RepositoryUrl>
+    <PackageReleaseNotes>https://github.com/reactivemarbles/ObservableEvents/releases</PackageReleaseNotes>
+    <RepositoryUrl>https://github.com/reactivemarbles/ObservableEvents</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
 
     <!-- Publish the repository URL in the built .nupkg (in the NuSpec <Repository> element) -->
