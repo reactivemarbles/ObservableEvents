@@ -202,9 +202,7 @@ namespace ReactiveMarbles.ObservableEvents
                 return true;
             }
 
-#pragma warning disable RS1024 // Compare symbols correctly
-            var processedItems = new HashSet<INamedTypeSymbol>(TypeDefinitionNameComparer.Default);
-#pragma warning restore RS1024 // Compare symbols correctly
+            var processedItems = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
 
             var fileType = isStatic ? "Static" : "Instance";
 
