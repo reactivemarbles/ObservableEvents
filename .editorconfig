@@ -427,6 +427,8 @@ dotnet_diagnostic.SX1101.severity = error
 dotnet_diagnostic.SX1309.severity = error
 dotnet_diagnostic.SX1623.severity = none
 
+dotnet_diagnostic.AD0001.severity = none
+
 # C++ Files
 [*.{cpp,h,in}]
 curly_bracket_next_line = true
