@@ -6,6 +6,8 @@ This project is a .NET 5 source generator which produces `IObservable<T>` for ev
 
 ## NuGet Packages
 
+Make sure your project is using the newer `PackageReference` inside your CSPROJ. The older style is buggy and should be moved away from regardless. See here for discussions how to [upgrade](https://docs.microsoft.com/en-us/nuget/consume-packages/migrate-packages-config-to-package-reference).
+
 Install the following packages to start using Observable Events.
 
 | Name                          | Platform          | NuGet                            |
