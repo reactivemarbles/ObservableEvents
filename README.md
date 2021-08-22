@@ -59,9 +59,8 @@ You must use include a attribute `GenerateStaticEventObservables` on the assembl
 
 ```cs
 [assembly: GenerateStaticEventObservablesAttribute(typeof(StaticTest))]
-
-    public static class StaticTest
-    {
-        public static event EventHandler? TestChanged;
-    }
+public static class StaticTest
+{
+    public static event EventHandler? TestChanged;
+}
 ```
