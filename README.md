@@ -1,5 +1,5 @@
 <a href="https://github.com/reactivemarbles/observableevents">
-    <img width="170" height="170" src="./images/logo.png"/>
+    <img width="170" src="./images/logo.png"/>
 </a>
 
 # Observable event generator
