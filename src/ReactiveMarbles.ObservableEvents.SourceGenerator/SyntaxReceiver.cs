@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 
 using Microsoft.CodeAnalysis;
@@ -15,13 +16,33 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator
 {
     internal class SyntaxReceiver : ISyntaxReceiver
     {
-        public List<InvocationExpressionSyntax> InstanceCandidates { get; } = new List<InvocationExpressionSyntax>();
+        public List<InvocationExpressionSyntax> Events { get; } = new List<InvocationExpressionSyntax>();
 
         public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
         {
-            if (syntaxNode is InvocationExpressionSyntax invocation)
+            if (syntaxNode is not InvocationExpressionSyntax invocationExpression)
             {
-                InstanceCandidates.Add(invocation);
+                return;
+            }
+
+            switch (invocationExpression.Expression)
+            {
+                case MemberAccessExpressionSyntax memberAccess:
+                    HandleSimpleName(memberAccess.Name, invocationExpression);
+                    break;
+                case MemberBindingExpressionSyntax bindingAccess:
+                    HandleSimpleName(bindingAccess.Name, invocationExpression);
+                    break;
+            }
+        }
+
+        private void HandleSimpleName(SimpleNameSyntax simpleName, InvocationExpressionSyntax invocationExpression)
+        {
+            var methodName = simpleName.Identifier.Text;
+
+            if (string.Equals(methodName, nameof(Events)))
+            {
+                Events.Add(invocationExpression);
             }
         }
     }
