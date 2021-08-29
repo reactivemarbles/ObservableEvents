@@ -138,7 +138,7 @@ namespace ReactiveMarbles.ObservableEvents
             instanceNamespaceList = new List<(Location Location, INamedTypeSymbol NamedType)>();
             staticNamespaceList = new List<(Location Location, INamedTypeSymbol NamedType)>();
 
-            foreach (var invocation in receiver.InstanceCandidates)
+            foreach (var invocation in receiver.Events)
             {
                 var semanticModel = compilation.GetSemanticModel(invocation.SyntaxTree);
 

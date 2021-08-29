@@ -13,10 +13,4 @@
   <ItemGroup>
     <ProjectReference Include="..\ReactiveMarbles.ObservableEvents.SourceGenerator\ReactiveMarbles.ObservableEvents.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
-
-  <Target Name="WorkaroundRemoveSourceGeneratedFiles" BeforeTargets="CoreCompile">
-    <ItemGroup>
-      <Compile Remove="**/*.SourceGenerated.cs" />
-    </ItemGroup>
-  </Target>
 </Project>
