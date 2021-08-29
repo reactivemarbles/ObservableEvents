@@ -11,7 +11,7 @@ using ReactiveMarbles.ObservableEvents;
 
 using Xamarin.Forms;
 
-[assembly: GenerateStaticEventObservablesAttribute(typeof(StaticTest))]
+[assembly: GenerateStaticEventObservables(typeof(StaticTest))]
 
 #pragma warning disable
 namespace ReactiveMarbles.ObservableEvents

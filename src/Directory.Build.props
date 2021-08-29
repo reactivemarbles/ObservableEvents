@@ -10,6 +10,7 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/reactivemarbles/ObservableEvents</PackageProjectUrl>
     <PackageDescription>Allows to get an observables for property changed events.</PackageDescription>
+    <PackageIcon>logo.png</PackageIcon>
     <Owners>glennawatson</Owners>
     <PackageTags>system.reactive;propertychanged;inpc;reactive;functional</PackageTags>
     <PackageReleaseNotes>https://github.com/reactivemarbles/ObservableEvents/releases</PackageReleaseNotes>
@@ -34,6 +35,7 @@
 
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)..\LICENSE" Pack="true" PackagePath="LICENSE" />
+    <None Include="$(MSBuildThisFileDirectory)..\images\logo.png" Pack="true" PackagePath="\"/>
   </ItemGroup>
 
   <ItemGroup>
