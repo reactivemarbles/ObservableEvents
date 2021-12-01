@@ -4,7 +4,7 @@
 
 # Observable Event Generator
 
-This project is a .NET 5 source generator which produces `IObservable<T>` for events contained within a object including all base classes. `ObservableEvents` generator will convert events within an assembly and create observable wrappers for them, it is based on [Pharmacist](https://github.com/reactiveui/Pharmacist) and uses [.NET Source Generator](https://docs.microsoft.com/en-us/dotnet/csharp/roslyn-sdk/source-generators-overview) technology.
+This project is a .NET source generator which produces `IObservable<T>` for events contained within a object including all base classes. `ObservableEvents` generator will convert events within an assembly and create observable wrappers for them, it is based on [Pharmacist](https://github.com/reactiveui/Pharmacist) and uses [.NET Source Generator](https://docs.microsoft.com/en-us/dotnet/csharp/roslyn-sdk/source-generators-overview) technology.
 
 ## NuGet Packages
 
