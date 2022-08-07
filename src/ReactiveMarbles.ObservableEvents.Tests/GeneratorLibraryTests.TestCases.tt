@@ -1,0 +1,107 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+<#
+    string[] PlatformNames = new[]
+    {
+        "MonoAndroid50",
+        "MonoAndroid51",
+        "MonoAndroid60",
+        "MonoAndroid70",
+        "MonoAndroid71",
+        "MonoAndroid80",
+        "MonoAndroid81",
+        "MonoAndroid90",
+        "MonoAndroid10.0",
+        "MonoAndroid11.0",
+        "MonoTouch10",
+        "Xamarin.iOS10",
+        "Xamarin.Mac20",
+        "Xamarin.TVOS10",
+        "Xamarin.WATCHOS10",
+        "net462",
+        "net6.0",
+    };
+
+    string[] NuGetPackageNames = new[]
+    {
+        "splat",
+        "Avalonia",
+        "Xamarin.Forms",
+        "Xamarin.Essentials",
+        "FluentAssertions",
+        "Uno.UI",
+        "Prism.Forms",
+        "SkiaSharp",
+        "Shiny",
+        "Newtonsoft.Json",
+    };
+
+    string[] NuGetPackageFrameworks = new[]
+    {
+        "netstandard2.0",
+        "net6.0",
+    };
+
+    string[] GeneratorActions = { "DeriveEventsTest3", "DeriveEventsTest4", "ConcreteClassCreate3", "ConcreteClassCreate4" };
+#>
+// Copyright (c) 2019-2022 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
+using System.Collections.Generic;
+
+using ReactiveMarbles.ObservableEvents.Tests.Compilation;
+
+using Xunit.Abstractions;
+
+namespace ReactiveMarbles.ObservableEvents.Tests;
+
+/// <summary>
+/// The test cases for the generator tests.
+/// </summary>
+public partial class GeneratorLibraryTests
+{
+    /// <summary>
+    /// Gets the testers for NuGet packages.
+    /// </summary>
+    public static IEnumerable<object[]> NuGetPackageTesters { get; } = new List<object[]>()
+    {
+<#
+foreach (var nugetPackageName in NuGetPackageNames)
+{
+    foreach (var platformName in NuGetPackageFrameworks)
+    {
+        foreach (var generatorAction in GeneratorActions)
+        {
+#>
+        new object[] { "<#= nugetPackageName #>", "<#= platformName #>", "<#= generatorAction #>", },
+<#
+        }
+    }
+}
+#>
+    };
+
+    /// <summary>
+    /// Gets the testers for platforms.
+    /// </summary>
+    public static IEnumerable<object[]> PlatformTesters { get; } = new List<object[]>()
+    {
+<#
+foreach (var platformName in PlatformNames)
+{
+    foreach (var generatorAction in GeneratorActions)
+    {
+#>
+        new object[] { "<#= platformName #>", "<#= generatorAction #>", },
+<#
+    }
+}
+#>
+    };
+}

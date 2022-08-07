@@ -10,7 +10,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.2.0" />
-    <PackageReference Include="xunit" Version="2.4.1" />
+    <PackageReference Include="xunit" Version="2.4.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -19,13 +19,34 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="3.11.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.0.1" />
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.3" PrivateAssets="all" />
     <PackageReference Include="ICSharpCode.Decompiler" Version="7.2.1.6856" />
-    <PackageReference Include="ReactiveMarbles.NuGet.Helpers" Version="1.0.11" />
+    <PackageReference Include="ReactiveMarbles.NuGet.Helpers" Version="1.0.33" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\ReactiveMarbles.ObservableEvents.Roslyn3\ReactiveMarbles.ObservableEvents.Roslyn38.csproj" />
+    <ProjectReference Include="..\ReactiveMarbles.ObservableEvents.Roslyn4\ReactiveMarbles.ObservableEvents.Roslyn40.csproj" />
     <ProjectReference Include="..\ReactiveMarbles.ObservableEvents.SourceGenerator\ReactiveMarbles.ObservableEvents.SourceGenerator.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="GeneratorLibraryTests.TestCases.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>GeneratorLibraryTests.TestCases.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="GeneratorLibraryTests.TestCases.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>GeneratorLibraryTests.TestCases.tt</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2019-2021 ReactiveUI Association Incorporated. All rights reserved.
+﻿// Copyright (c) 2019-2022 ReactiveUI Association Incorporated. All rights reserved.
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -10,8 +10,6 @@ using System.Threading.Tasks;
 
 using ICSharpCode.Decompiler.TypeSystem;
 
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-
 using NuGet.Frameworks;
 using NuGet.LibraryModel;
 using NuGet.Versioning;
@@ -22,253 +20,217 @@ using ReactiveMarbles.ObservableEvents.Tests.Compilation;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace ReactiveMarbles.ObservableEvents.Tests
+namespace ReactiveMarbles.ObservableEvents.Tests;
+
+/// <summary>
+/// Tests for generators.
+/// </summary>
+public partial class GeneratorLibraryTests
 {
-    /// <summary>
-    /// Tests for generators.
-    /// </summary>
-    public class GeneratorLibraryTests
+    private readonly ITestOutputHelper _testOutputHelper;
+
+    public GeneratorLibraryTests(ITestOutputHelper testOutputHelper) => _testOutputHelper = testOutputHelper;
+
+    [Theory]
+    [MemberData(nameof(NuGetPackageTesters))]
+    public Task TestNuGet(string nugetPackageName, string targetFramework, string action)
     {
-        private static readonly string[] PlatformNames = new[]
-        {
-            "MonoAndroid50",
-            "MonoAndroid51",
-            "MonoAndroid60",
-            "MonoAndroid70",
-            "MonoAndroid71",
-            "MonoAndroid80",
-            "MonoAndroid81",
-            "MonoAndroid90",
-            "MonoAndroid10.0",
-            "MonoAndroid11.0",
-            "MonoTouch10",
-            "Xamarin.iOS10",
-            "Xamarin.Mac20",
-            "Xamarin.TVOS10",
-            "Xamarin.WATCHOS10",
-            "net461",
-            "net5.0",
-        };
+        return RunNuGetTests(nugetPackageName, targetFramework, _testOutputHelper, GetAction(action));
+    }
 
-        private static readonly string[] NuGetPackageNames = new[]
-        {
-            "splat",
-            "Avalonia",
-            "Xamarin.Forms",
-            "Xamarin.Essentials",
-            "FluentAssertions",
-            "Uno.UI",
-            "Prism.Forms",
-            "SkiaSharp",
-            "Shiny",
-            "Newtonsoft.Json",
-        };
+    [Theory]
+    [MemberData(nameof(PlatformTesters))]
+    public Task TestPlatform(string platform, string action)
+    {
+        var input = new InputAssembliesGroup();
 
-        private static readonly string[] NuGetPackageFrameworks = new[]
-        {
-            "netstandard2.0",
-            "net5.0"
-        };
+        var frameworks = platform.ToFrameworks();
+        var framework = frameworks[0];
+        input.IncludeGroup.AddFiles(FileSystemHelpers.GetFilesWithinSubdirectories(framework.GetNuGetFrameworkFolders(), AssemblyHelpers.AssemblyFileExtensionsSet));
 
-        private readonly ITestOutputHelper _testOutputHelper;
+        return RunTests(input, frameworks, _testOutputHelper, GetAction(action));
+    }
 
-        public GeneratorLibraryTests(ITestOutputHelper testOutputHelper) => _testOutputHelper = testOutputHelper;
+    private static Action<ITestOutputHelper, EventBuilderCompiler> GetAction(string actionName) => actionName switch
+    {
+        nameof(DeriveEventsTest3) => DeriveEventsTest3,
+        nameof(DeriveEventsTest4) => DeriveEventsTest4,
+        nameof(ConcreteClassCreate3) => ConcreteClassCreate3,
+        nameof(ConcreteClassCreate4) => ConcreteClassCreate4,
+        _ => throw new InvalidOperationException("Unknown action name"),
+    };
 
-        public static IEnumerable<object[]> Platforms { get; } = PlatformNames.Select(x => new object[] { x });
-
-        public static IEnumerable<object[]> NuGetPackages { get; } = NuGetPackageNames.SelectMany(nuget => NuGetPackageFrameworks.Select(platform => new object[] { nuget, platform }));
-
-        [Theory]
-        [MemberData(nameof(NuGetPackages))]
-        public Task TestDerived(string nugetPackageName, string targetFramework)
-        {
-            return RunNuGetTests(nugetPackageName, targetFramework, DeriveEventsTest);
-        }
-
-        [Theory]
-        [MemberData(nameof(NuGetPackages))]
-        public Task TestConcrete(string nugetPackageName, string targetFramework)
-        {
-            return RunNuGetTests(nugetPackageName, targetFramework, ConcreteClassCreate);
-        }
-
-        [Theory]
-        [MemberData(nameof(Platforms))]
-        public Task TestPlatformConcrete(string platform)
-        {
-            var input = new InputAssembliesGroup();
-
-            var frameworks = platform.ToFrameworks();
-            var framework = frameworks[0];
-            input.IncludeGroup.AddFiles(FileSystemHelpers.GetFilesWithinSubdirectories(framework.GetNuGetFrameworkFolders(), AssemblyHelpers.AssemblyFileExtensionsSet));
-
-            return RunTests(input, frameworks, ConcreteClassCreate);
-        }
-
-        [Theory]
-        [MemberData(nameof(Platforms))]
-        public Task TestPlatformDerived(string platform)
-        {
-            var input = new InputAssembliesGroup();
-
-            var frameworks = platform.ToFrameworks();
-            var framework = frameworks[0];
-            input.IncludeGroup.AddFiles(FileSystemHelpers.GetFilesWithinSubdirectories(framework.GetNuGetFrameworkFolders(), AssemblyHelpers.AssemblyFileExtensionsSet));
-
-            return RunTests(input, frameworks, DeriveEventsTest);
-        }
-
-        private static async Task RunNuGetTests(string nugetPackageName, string targetFramework, Action<EventBuilderCompiler> action)
-        {
-            var targetFrameworks = targetFramework.ToFrameworks();
+    private static async Task RunNuGetTests(string nugetPackageName, string targetFramework, ITestOutputHelper output, Action<ITestOutputHelper, EventBuilderCompiler> action)
+    {
+        var targetFrameworks = targetFramework.ToFrameworks();
 
 #pragma warning disable CS0618 // Type or member is obsolete
-            var library = new LibraryRange(nugetPackageName, VersionRange.AllStableFloating, LibraryDependencyTarget.Package);
+        var library = new LibraryRange(nugetPackageName, VersionRange.AllStableFloating, LibraryDependencyTarget.Package);
 #pragma warning restore CS0618 // Type or member is obsolete
-            var inputGroup = await NuGetPackageHelper.DownloadPackageFilesAndFolder(library, targetFrameworks, packageOutputDirectory: null).ConfigureAwait(false);
+        var inputGroup = await NuGetPackageHelper.DownloadPackageFilesAndFolder(library, targetFrameworks, packageOutputDirectory: null).ConfigureAwait(false);
 
-            await RunTests(inputGroup, targetFrameworks, action).ConfigureAwait(false);
-        }
+        await RunTests(inputGroup, targetFrameworks, output, action).ConfigureAwait(false);
+    }
 
-        private static async Task RunTests(InputAssembliesGroup inputGroup, IReadOnlyList<NuGetFramework> targetFrameworks, Action<EventBuilderCompiler> action)
-        {
+    private static async Task RunTests(InputAssembliesGroup inputGroup, IReadOnlyList<NuGetFramework> targetFrameworks, ITestOutputHelper output, Action<ITestOutputHelper, EventBuilderCompiler> action)
+    {
 #pragma warning disable CS0618 // Type or member is obsolete
-            var rxLibrary = new LibraryRange("System.Reactive", VersionRange.AllStableFloating, LibraryDependencyTarget.Package);
+        var rxLibrary = new LibraryRange("System.Reactive", VersionRange.AllStableFloating, LibraryDependencyTarget.Package);
 #pragma warning restore CS0618 // Type or member is obsolete
 
-            var rxui = await NuGetPackageHelper.DownloadPackageFilesAndFolder(rxLibrary, targetFrameworks, packageOutputDirectory: null).ConfigureAwait(false);
+        var rxui = await NuGetPackageHelper.DownloadPackageFilesAndFolder(rxLibrary, targetFrameworks, packageOutputDirectory: null).ConfigureAwait(false);
 
-            var framework = targetFrameworks[0];
-            var compilation = new EventBuilderCompiler(inputGroup, rxui, framework);
+        var framework = targetFrameworks[0];
+        var compilation = new EventBuilderCompiler(inputGroup, rxui, framework);
 
-            action(compilation);
-        }
+        action(output, compilation);
+    }
 
-        private static List<ITypeDefinition> GetValidTypes(ICompilation compilation, bool allowSealed)
+    private static List<ITypeDefinition> GetValidTypes(ICompilation compilation, bool allowSealed)
+    {
+        var items = new List<ITypeDefinition>();
+        foreach (var module in compilation.Modules)
         {
-            var items = new List<ITypeDefinition>();
-            foreach (var module in compilation.Modules)
+            foreach (var typeDefinition in module.TypeDefinitions)
             {
-                foreach (var typeDefinition in module.TypeDefinitions)
-                {
-                    if (typeDefinition.IsSealed && !allowSealed)
-                    {
-                        continue;
-                    }
-
-                    if (typeDefinition.Accessibility != Accessibility.Public)
-                    {
-                        continue;
-                    }
-
-                    if (typeDefinition.IsAbstract)
-                    {
-                        continue;
-                    }
-
-                    if (typeDefinition.Kind != TypeKind.Class)
-                    {
-                        continue;
-                    }
-
-                    if (!typeDefinition.GetConstructors().Any(x => x.Parameters.Count == 0 && x.Accessibility == Accessibility.Public && x.GetAttribute(KnownAttribute.Obsolete) is null))
-                    {
-                        continue;
-                    }
-
-                    if (typeDefinition.GetAttributes().Any(x => x.AttributeType.FullName.Equals("System.ObsoleteAttribute", StringComparison.Ordinal)))
-                    {
-                        continue;
-                    }
-
-                    if (typeDefinition.GetAttribute(KnownAttribute.Obsolete, true) is not null)
-                    {
-                        continue;
-                    }
-
-                    if (typeDefinition.TypeParameterCount > 0)
-                    {
-                        continue;
-                    }
-
-                    var events = typeDefinition.GetEvents().Where(IsValidEvent);
-
-                    if (events.Any())
-                    {
-                        items.Add(typeDefinition);
-                    }
-                }
-            }
-
-            return items;
-        }
-
-        private static List<IEvent> GetValidEvents(ITypeDefinition type) =>
-            type.GetEvents(IsValidEvent).ToList();
-
-        private static bool IsValidEvent(IEvent eventDetails)
-        {
-            if (eventDetails.IsStatic)
-            {
-                return false;
-            }
-
-            if (eventDetails.GetAttribute(KnownAttribute.Obsolete, true) is not null)
-            {
-                return false;
-            }
-
-            var delegateType = eventDetails.ReturnType;
-
-            if (delegateType is null)
-            {
-                return false;
-            }
-
-            var invoke = delegateType.GetDelegateInvokeMethod();
-
-            if (invoke is null)
-            {
-                return false;
-            }
-
-            if (invoke.ReturnType.FullName != "System.Void")
-            {
-                return false;
-            }
-
-            if (eventDetails.Accessibility != Accessibility.Public)
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        private void DeriveEventsTest(EventBuilderCompiler compilation)
-        {
-            foreach (var classDeclaration in GetValidTypes(compilation, false))
-            {
-                var eventGenerationCalls = new StringBuilder();
-
-                var events = GetValidEvents(classDeclaration);
-
-                if (events.Count == 0)
+                if (typeDefinition.IsSealed && !allowSealed)
                 {
                     continue;
                 }
 
-                foreach (var eventDeclaration in events)
-                {
-                    eventGenerationCalls.Append("          this.Events().").Append(eventDeclaration.Name).AppendLine(".Subscribe();");
-                }
-
-                if (eventGenerationCalls.Length == 0)
+                if (typeDefinition.Accessibility != Accessibility.Public)
                 {
                     continue;
                 }
 
-                var source = $@"
+                if (typeDefinition.IsAbstract)
+                {
+                    continue;
+                }
+
+                if (typeDefinition.Kind != TypeKind.Class)
+                {
+                    continue;
+                }
+
+                if (!typeDefinition.GetConstructors().Any(x => x.Parameters.Count == 0 && x.Accessibility == Accessibility.Public && x.GetAttribute(KnownAttribute.Obsolete) is null))
+                {
+                    continue;
+                }
+
+                if (typeDefinition.GetAttributes().Any(x => x.AttributeType.FullName.Equals("System.ObsoleteAttribute", StringComparison.Ordinal)))
+                {
+                    continue;
+                }
+
+                if (typeDefinition.GetAttribute(KnownAttribute.Obsolete, true) is not null)
+                {
+                    continue;
+                }
+
+                if (typeDefinition.TypeParameterCount > 0)
+                {
+                    continue;
+                }
+
+                var events = typeDefinition.GetEvents().Where(IsValidEvent);
+
+                if (events.Any())
+                {
+                    items.Add(typeDefinition);
+                }
+            }
+        }
+
+        return items;
+    }
+
+    private static List<IEvent> GetValidEvents(ITypeDefinition type) =>
+        type.GetEvents(IsValidEvent).ToList();
+
+    private static bool IsValidEvent(IEvent eventDetails)
+    {
+        if (eventDetails.IsStatic)
+        {
+            return false;
+        }
+
+        if (eventDetails.GetAttribute(KnownAttribute.Obsolete, true) is not null)
+        {
+            return false;
+        }
+
+        var delegateType = eventDetails.ReturnType;
+
+        if (delegateType is null)
+        {
+            return false;
+        }
+
+        var invoke = delegateType.GetDelegateInvokeMethod();
+
+        if (invoke is null)
+        {
+            return false;
+        }
+
+        if (invoke.ReturnType.FullName != "System.Void")
+        {
+            return false;
+        }
+
+        if (eventDetails.Accessibility != Accessibility.Public)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private static void DeriveEventsTest3(ITestOutputHelper testOutput, EventBuilderCompiler compilation) => DeriveEventsTest(
+        testOutput,
+        compilation,
+        (gen, compiler, source) =>
+            gen.RunGenerator3(
+                    compiler,
+                    out _,
+                    out _,
+                    source));
+
+    private static void DeriveEventsTest4(ITestOutputHelper testOutput, EventBuilderCompiler compilation) => DeriveEventsTest(
+        testOutput,
+        compilation,
+        (gen, compiler, source) =>
+            gen.RunGenerator4(
+                    compiler,
+                    out _,
+                    out _,
+                    source));
+
+    private static void DeriveEventsTest(ITestOutputHelper testOutput, EventBuilderCompiler compilation, Action<SourceGeneratorUtility, EventBuilderCompiler, string> runGenerator)
+    {
+        foreach (var classDeclaration in GetValidTypes(compilation, false))
+        {
+            var eventGenerationCalls = new StringBuilder();
+
+            var events = GetValidEvents(classDeclaration);
+
+            if (events.Count == 0)
+            {
+                continue;
+            }
+
+            foreach (var eventDeclaration in events)
+            {
+                eventGenerationCalls.Append("          this.Events().").Append(eventDeclaration.Name).AppendLine(".Subscribe();");
+            }
+
+            if (eventGenerationCalls.Length == 0)
+            {
+                continue;
+            }
+
+            var source = $@"
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -287,39 +249,55 @@ namespace ReactiveMarbles.ObservableEvents.Tests
 }}
 ";
 
-                var sourceGeneratorUtility = new SourceGeneratorUtility(_testOutputHelper);
-                sourceGeneratorUtility.RunGenerator(
-                    compilation,
-                    out _,
-                    out _,
-                    source);
-            }
+            var sourceGeneratorUtility = new SourceGeneratorUtility(testOutput);
+            runGenerator(sourceGeneratorUtility, compilation, source);
         }
+    }
 
-        private void ConcreteClassCreate(EventBuilderCompiler compilation)
+    private static void ConcreteClassCreate3(ITestOutputHelper testOutput, EventBuilderCompiler compilation) => ConcreteClassCreate(
+        testOutput,
+        compilation,
+        (gen, compiler, source) =>
+            gen.RunGenerator3(
+                    compiler,
+                    out _,
+                    out _,
+                    source));
+
+    private static void ConcreteClassCreate4(ITestOutputHelper testOutput, EventBuilderCompiler compilation) => ConcreteClassCreate(
+        testOutput,
+        compilation,
+        (gen, compiler, source) =>
+            gen.RunGenerator4(
+                    compiler,
+                    out _,
+                    out _,
+                    source));
+
+    private static void ConcreteClassCreate(ITestOutputHelper testOutput, EventBuilderCompiler compilation, Action<SourceGeneratorUtility, EventBuilderCompiler, string> runGenerator)
+    {
+        foreach (var classDeclaration in GetValidTypes(compilation, true))
         {
-            foreach (var classDeclaration in GetValidTypes(compilation, true))
+            var eventGenerationCalls = new StringBuilder();
+
+            var events = GetValidEvents(classDeclaration);
+
+            if (events.Count == 0)
             {
-                var eventGenerationCalls = new StringBuilder();
+                continue;
+            }
 
-                var events = GetValidEvents(classDeclaration);
+            foreach (var eventDeclaration in events)
+            {
+                eventGenerationCalls.Append("          Test.Events().").Append(eventDeclaration.Name).AppendLine(".Subscribe();");
+            }
 
-                if (events.Count == 0)
-                {
-                    continue;
-                }
+            if (eventGenerationCalls.Length == 0)
+            {
+                continue;
+            }
 
-                foreach (var eventDeclaration in events)
-                {
-                    eventGenerationCalls.Append("          Test.Events().").Append(eventDeclaration.Name).AppendLine(".Subscribe();");
-                }
-
-                if (eventGenerationCalls.Length == 0)
-                {
-                    continue;
-                }
-
-                var source = $@"
+            var source = $@"
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -339,13 +317,11 @@ namespace ReactiveMarbles.ObservableEvents.Tests
 }}
 ";
 
-                var sourceGeneratorUtility = new SourceGeneratorUtility(_testOutputHelper);
-                sourceGeneratorUtility.RunGenerator(
-                    compilation,
-                    out _,
-                    out _,
-                    source);
-            }
+            var sourceGeneratorUtility = new SourceGeneratorUtility(testOutput);
+            runGenerator(
+                sourceGeneratorUtility,
+                compilation,
+                source);
         }
     }
 }

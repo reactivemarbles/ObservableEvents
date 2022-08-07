@@ -8,14 +8,17 @@
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <NoWarn>$(NoWarn);AD0001</NoWarn>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>ReactiveMarbles.ObservableEvents.SourceGenerator</PackageId>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="3.11.0" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.3" PrivateAssets="all" />
+    <ProjectReference Include="..\ReactiveMarbles.ObservableEvents.Roslyn3\ReactiveMarbles.ObservableEvents.Roslyn38.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\ReactiveMarbles.ObservableEvents.Roslyn4\ReactiveMarbles.ObservableEvents.Roslyn40.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <None Include="..\ReactiveMarbles.ObservableEvents.Roslyn3\bin\$(Configuration)\netstandard2.0\ReactiveMarbles.ObservableEvents.Roslyn38.dll" PackagePath="analyzers\dotnet\roslyn3.8\cs" Pack="true" Visible="false" />
+    <None Include="..\ReactiveMarbles.ObservableEvents.Roslyn4\bin\$(Configuration)\netstandard2.0\ReactiveMarbles.ObservableEvents.Roslyn40.dll" PackagePath="analyzers\dotnet\roslyn4.0\cs" Pack="true" Visible="false" />
+    <None Include="buildTransitive\**\*" Pack="true" PackagePath="buildTransitive" />
   </ItemGroup>
 </Project>

@@ -1,0 +1,31 @@
+﻿<Project>
+  <Target Name="_RxMarblesObservableEventsGatherAnalyzers">
+
+    <ItemGroup>
+      <_RxMarblesObservableEventsAnalyzer Include="@(Analyzer)" Condition="'%(Analyzer.NuGetPackageId)' == 'ReactiveMarbles.ObservableEvents.SourceGenerator'" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_RxMarblesObservableEventsAnalyzerMultiTargeting" 
+          Condition="'$(SupportsRoslynComponentVersioning)' != 'true'" 
+          AfterTargets="ResolvePackageDependenciesForBuild;ResolveNuGetPackageAssets"
+          DependsOnTargets="_RxMarblesObservableEventsGatherAnalyzers">
+
+    <ItemGroup>
+      <!-- Remove our analyzers targeting roslyn4.x -->
+      <Analyzer Remove="@(_RxMarblesObservableEventsAnalyzer)"
+                Condition="$([System.String]::Copy('%(_RxMarblesObservableEventsAnalyzer.Identity)').IndexOf('roslyn4')) &gt;= 0"/>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_RxMarblesObservableEventsRemoveAnalyzers" 
+          Condition="'$({DisableSourceGeneratorPropertyName})' == 'true'"
+          AfterTargets="ResolvePackageDependenciesForBuild;ResolveNuGetPackageAssets"
+          DependsOnTargets="_RxMarblesObservableEventsGatherAnalyzers">
+
+    <!-- Remove all our analyzers -->
+    <ItemGroup>
+      <Analyzer Remove="@(_RxMarblesObservableEventsAnalyzer)" />
+    </ItemGroup>
+  </Target>
+</Project>

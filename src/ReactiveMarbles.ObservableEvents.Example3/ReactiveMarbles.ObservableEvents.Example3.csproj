@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>preview</LangVersion>
+    <IsPackable>false</IsPackable>
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+    <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)\GeneratedFiles</CompilerGeneratedFilesOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Reactive" Version="5.0.0" />
+    <PackageReference Include="xamarin.forms" Version="5.*" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ReactiveMarbles.ObservableEvents.Roslyn3\ReactiveMarbles.ObservableEvents.Roslyn38.csproj"  OutputItemType="Analyzer" />
+  </ItemGroup>
+</Project>

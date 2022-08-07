@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2019-2021 ReactiveUI Association Incorporated. All rights reserved.
+﻿// Copyright (c) 2019-2022 ReactiveUI Association Incorporated. All rights reserved.
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -15,6 +15,7 @@ using Microsoft.CodeAnalysis.CSharp;
 
 using ReactiveMarbles.ObservableEvents.SourceGenerator;
 using ReactiveMarbles.ObservableEvents.Tests.Compilation;
+
 using Xunit.Abstractions;
 
 namespace ReactiveMarbles.ObservableEvents.Tests
@@ -22,7 +23,7 @@ namespace ReactiveMarbles.ObservableEvents.Tests
     internal class SourceGeneratorUtility
     {
         private static readonly MetadataReference[] SystemAssemblyReferences;
-        private ITestOutputHelper _testOutputHelper;
+        private readonly ITestOutputHelper _testOutputHelper;
 
         static SourceGeneratorUtility()
         {
@@ -56,11 +57,23 @@ namespace ReactiveMarbles.ObservableEvents.Tests
             _testOutputHelper = testOutputHelper;
         }
 
-        public void RunGenerator(EventBuilderCompiler compiler, out ImmutableArray<Diagnostic> compilationDiagnostics, out ImmutableArray<Diagnostic> generatorDiagnostics, params string[] sources)
+        public void RunGenerator3(EventBuilderCompiler compiler, out ImmutableArray<Diagnostic> compilationDiagnostics, out ImmutableArray<Diagnostic> generatorDiagnostics, params string[] sources)
         {
             var compilation = CreateCompilation(compiler, sources);
 
-            var newCompilation = RunGenerators(compilation, out generatorDiagnostics, new EventGenerator());
+            var newCompilation = RunGenerators(compilation, out generatorDiagnostics, new EventGenerator3());
+
+            compilationDiagnostics = newCompilation.GetDiagnostics();
+
+            ShouldHaveNoCompilerDiagnosticsWarningOrAbove(_testOutputHelper, newCompilation, compilationDiagnostics);
+            ShouldHaveNoCompilerDiagnosticsWarningOrAbove(_testOutputHelper, compilation, generatorDiagnostics);
+        }
+
+        public void RunGenerator4(EventBuilderCompiler compiler, out ImmutableArray<Diagnostic> compilationDiagnostics, out ImmutableArray<Diagnostic> generatorDiagnostics, params string[] sources)
+        {
+            var compilation = CreateCompilation(compiler, sources);
+
+            var newCompilation = RunGenerators(compilation, out generatorDiagnostics, new EventGenerator4());
 
             compilationDiagnostics = newCompilation.GetDiagnostics();
 
@@ -116,9 +129,29 @@ namespace ReactiveMarbles.ObservableEvents.Tests
             return outputCompilation;
         }
 
+        /// <summary>
+        /// Executes the source generators.
+        /// </summary>
+        /// <param name="compilation">The target compilation.</param>
+        /// <param name="diagnostics">The resulting diagnostics.</param>
+        /// <param name="generators">The generators to include in the compilation.</param>
+        /// <returns>The new compilation after the generators have executed.</returns>
+        private static Microsoft.CodeAnalysis.Compilation RunGenerators(Microsoft.CodeAnalysis.Compilation compilation, out ImmutableArray<Diagnostic> diagnostics, params IIncrementalGenerator[] generators)
+        {
+            CreateDriver(compilation, generators).RunGeneratorsAndUpdateCompilation(compilation, out var outputCompilation, out diagnostics);
+            return outputCompilation;
+        }
+
         private static GeneratorDriver CreateDriver(Microsoft.CodeAnalysis.Compilation compilation, params ISourceGenerator[] generators) =>
             CSharpGeneratorDriver.Create(
                 generators: ImmutableArray.Create(generators),
+                additionalTexts: ImmutableArray<AdditionalText>.Empty,
+                parseOptions: (CSharpParseOptions)compilation.SyntaxTrees.First().Options,
+                optionsProvider: null);
+
+        private static GeneratorDriver CreateDriver(Microsoft.CodeAnalysis.Compilation compilation, params IIncrementalGenerator[] generators) =>
+            CSharpGeneratorDriver.Create(
+                generators: generators.Select(GeneratorExtensions.AsSourceGenerator),
                 additionalTexts: ImmutableArray<AdditionalText>.Empty,
                 parseOptions: (CSharpParseOptions)compilation.SyntaxTrees.First().Options,
                 optionsProvider: null);

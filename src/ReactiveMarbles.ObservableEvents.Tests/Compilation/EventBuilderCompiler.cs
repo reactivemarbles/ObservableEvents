@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2021 ReactiveUI Association Incorporated. All rights reserved.
+// Copyright (c) 2019-2022 ReactiveUI Association Incorporated. All rights reserved.
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -13,10 +13,7 @@ using ICSharpCode.Decompiler.TypeSystem;
 using ICSharpCode.Decompiler.TypeSystem.Implementation;
 using ICSharpCode.Decompiler.Util;
 
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-
 using NuGet.Frameworks;
-using NuGet.Packaging;
 
 using ReactiveMarbles.NuGet.Helpers;
 using ReactiveMarbles.ObservableEvents.Tests.Comparers;
@@ -30,7 +27,7 @@ namespace ReactiveMarbles.ObservableEvents.Tests.Compilation
     /// <summary>
     /// Simple compilation implementation.
     /// </summary>
-    internal sealed class EventBuilderCompiler : ICompilation, IDisposable
+    public sealed class EventBuilderCompiler : ICompilation, IDisposable
     {
         private readonly KnownTypeCache _knownTypeCache;
         private readonly List<IModule> _assemblies = new();
