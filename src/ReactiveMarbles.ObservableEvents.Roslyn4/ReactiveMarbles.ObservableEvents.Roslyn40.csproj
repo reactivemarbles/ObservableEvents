@@ -13,19 +13,25 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.0.1" PrivateAssets="all" />
+    <PackageReference Include="ReactiveMarbles.RoslynHelpers" Version="1.2.8" PrivateAssets="all" />
   </ItemGroup>
   
   <ItemGroup>
-    <Using Include="Microsoft.CodeAnalysis"/>
-    <Using Include="Microsoft.CodeAnalysis.CSharp"/>
-    <Using Include="Microsoft.CodeAnalysis.CSharp.Syntax"/>
-    <Using Include="Microsoft.CodeAnalysis.Text"/>
-    <Using Include="System.Collections.Immutable"/>
-    <Using Include="System.Text"/>
+    <Using Include="Microsoft.CodeAnalysis" />
+    <Using Include="Microsoft.CodeAnalysis.CSharp" />
+    <Using Include="Microsoft.CodeAnalysis.CSharp.Syntax" />
+    <Using Include="Microsoft.CodeAnalysis.Text" />
+    <Using Include="System.Collections.Immutable" />
+    <Using Include="System.Text" />
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)..\Shared\**\*.cs" LinkBase="Shared"  />
+    <Compile Include="$(MSBuildThisFileDirectory)..\Shared\**\*.cs" LinkBase="Shared" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="C:\source\rxmarbles\ObservableEvents\src\ReactiveMarbles.ObservableEvents.Roslyn4\..\Shared\SyntaxExtensions.cs" />
+    <Compile Remove="C:\source\rxmarbles\ObservableEvents\src\ReactiveMarbles.ObservableEvents.Roslyn4\..\Shared\SyntaxFactoryHelpers.cs" />
   </ItemGroup>
 
 </Project>

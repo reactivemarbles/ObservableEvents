@@ -13,18 +13,19 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.8.0" />
+    <PackageReference Include="ReactiveMarbles.RoslynHelpers" Version="1.2.8" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
-    <Using Include="Microsoft.CodeAnalysis"/>
-    <Using Include="Microsoft.CodeAnalysis.CSharp"/>
-    <Using Include="Microsoft.CodeAnalysis.CSharp.Syntax"/>
-    <Using Include="Microsoft.CodeAnalysis.Text"/>
-    <Using Include="System.Collections.Immutable"/>
-    <Using Include="System.Text"/>
+    <Using Include="Microsoft.CodeAnalysis" />
+    <Using Include="Microsoft.CodeAnalysis.CSharp" />
+    <Using Include="Microsoft.CodeAnalysis.CSharp.Syntax" />
+    <Using Include="Microsoft.CodeAnalysis.Text" />
+    <Using Include="System.Collections.Immutable" />
+    <Using Include="System.Text" />
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)..\Shared\**\*.cs" LinkBase="Shared"  />
+    <Compile Include="$(MSBuildThisFileDirectory)..\Shared\**\*.cs" LinkBase="Shared" />
   </ItemGroup>
 </Project>

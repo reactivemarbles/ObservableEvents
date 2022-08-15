@@ -36,11 +36,9 @@ The `PrivateAssets` will prevent the ObservableEvents source generator from bein
 
 ### Instance Based
 
-It injects a class for instance based events into your source code which will expose a extension method called `Events()`. You need to include the namespace `ReactiveMarbles.ObservableEvents` to access to the extension method. You can then use this to get `IObservable<T>` instances from your events.
+It injects a class for instance based events into your source code which will expose a extension method called `Events()`. You can then use this to get `IObservable<T>` instances from your events.
 
 ```cs
-using ReactiveMarbles.ObservableEvents;
-
 public void MyClass : INotifyPropertyChanged
 {
   // Assumes this belong in a class with a event called PropertyChanged.
@@ -55,12 +53,14 @@ public void MyClass : INotifyPropertyChanged
 
 ### Static Events
 
-You must use include a attribute `GenerateStaticEventObservables` on the assembly level for a particular class. This will generate a class `RxEvents` in the same namespace as the specified class.
+You must use include a attribute `GenerateStaticEventObservables` on the assembly level for a particular class. This will generate a class `Rx<ClassName>Events` in the same namespace as the specified class.
 
 ```cs
 [assembly: GenerateStaticEventObservablesAttribute(typeof(StaticTest))]
 public static class StaticTest
 {
     public static event EventHandler? TestChanged;
+
+    public static IObservable<Unit> TestChangedObservable => RxStaticTestEvents.TestChanged;
 }
 ```

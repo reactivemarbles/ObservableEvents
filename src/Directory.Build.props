@@ -6,11 +6,13 @@
     <IsTestProject>$(MSBuildProjectName.Contains('Tests'))</IsTestProject>
     <DebugType>embedded</DebugType>
     <Authors>Glenn Watson</Authors>
-    <Copyright>Copyright (c) 2021 ReactiveUI Association Inc</Copyright>
+    <Company>ReactiveUI Association Inc</Company>
+    <Copyright>Copyright © 2020 - $([System.DateTime]::Now.ToString(yyyy)) $(Company)</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/reactivemarbles/ObservableEvents</PackageProjectUrl>
     <PackageDescription>Allows to get an observables for property changed events.</PackageDescription>
     <PackageIcon>logo.png</PackageIcon>
+    <PackageReadmeFile>docs\README.md</PackageReadmeFile>
     <Owners>glennawatson</Owners>
     <PackageTags>system.reactive;propertychanged;inpc;reactive;functional</PackageTags>
     <PackageReleaseNotes>https://github.com/reactivemarbles/ObservableEvents/releases</PackageReleaseNotes>
@@ -38,6 +40,7 @@
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)..\LICENSE" Pack="true" PackagePath="LICENSE" />
     <None Include="$(MSBuildThisFileDirectory)..\images\logo.png" Pack="true" PackagePath="\"/>
+    <None Include="$(MSBuildThisFileDirectory)..\README.md" Pack="true" PackagePath="\docs"/>
   </ItemGroup>
 
   <ItemGroup>

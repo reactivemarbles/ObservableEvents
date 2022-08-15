@@ -113,7 +113,8 @@ namespace ReactiveMarbles.ObservableEvents.Tests
                 assemblyName: "compilation" + Guid.NewGuid(),
                 syntaxTrees: sources.Select(x => CSharpSyntaxTree.ParseText(x, new CSharpParseOptions(LanguageVersion.Latest))),
                 references: assemblies,
-                options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, deterministic: true));
+                options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, deterministic: true)
+                    .WithSpecificDiagnosticOptions(new KeyValuePair<string, ReportDiagnostic>[] { new KeyValuePair<string, ReportDiagnostic>("CS1701", ReportDiagnostic.Suppress) }));
         }
 
         /// <summary>

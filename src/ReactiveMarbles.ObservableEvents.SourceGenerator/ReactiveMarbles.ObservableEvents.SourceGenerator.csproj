@@ -6,9 +6,9 @@
     <LangVersion>latest</LangVersion>
     <DevelopmentDependency>true</DevelopmentDependency>
     <IncludeBuildOutput>false</IncludeBuildOutput>
-    <NoWarn>$(NoWarn);AD0001</NoWarn>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>ReactiveMarbles.ObservableEvents.SourceGenerator</PackageId>
+    <NoWarn>$(NoWarn);NU5128;AD0001</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

@@ -6,7 +6,7 @@ using ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators;
 using ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators.Generators;
 using ReactiveMarbles.PropertyChanged.SourceGenerator;
 
-using static ReactiveMarbles.ObservableEvents.SourceGenerator.SyntaxFactoryHelpers;
+using static ReactiveMarbles.RoslynHelpers.SyntaxFactoryHelpers;
 
 namespace ReactiveMarbles.ObservableEvents.SourceGenerator;
 
@@ -115,6 +115,7 @@ internal static class EventGeneratorHelpers
         }
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("MicrosoftCodeAnalysisCorrectness", "RS1024:Compare symbols correctly", Justification = "Has custom comparer")]
     private static bool GenerateEvents(
         Action<Diagnostic> reportDiagnostic,
         Action<string, string> addSource,
@@ -163,7 +164,7 @@ internal static class EventGeneratorHelpers
 
             var sourceText = compilationUnit.ToFullString();
 
-            var name = $"SourceClass{item.ToDisplayString(RoslynHelpers.SymbolDisplayFormat)}-{fileType}Events.SourceGenerated.cs";
+            var name = $"SourceClass{item.ToDisplayString(RoslynHelpers.RoslynCommonHelpers.SymbolDisplayFormat)}-{fileType}Events.SourceGenerated.cs";
 
             addSource(name, sourceText);
 

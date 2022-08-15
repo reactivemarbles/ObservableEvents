@@ -4,7 +4,7 @@
 
 using System.Globalization;
 
-using static ReactiveMarbles.ObservableEvents.SourceGenerator.SyntaxFactoryHelpers;
+using static ReactiveMarbles.RoslynHelpers.SyntaxFactoryHelpers;
 
 namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators
 {

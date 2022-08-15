@@ -111,46 +111,65 @@ namespace ReactiveMarbles.ObservableEvents.Tests.Compilation
         }
 
         private static IEnumerable<IModule> GetFrameworkModules(NuGetFramework framework, ITypeResolveContext context)
-{
+        {
+            var outputList = new List<IModule>();
+
             foreach (var file in FileSystemHelpers.GetFilesWithinSubdirectories(framework.GetNuGetFrameworkFolders()))
             {
-                var assembly = new PEFile(file, PEStreamOptions.PrefetchMetadata);
-
-                var moduleReference = (IModuleReference)assembly;
-
-                var module = moduleReference.Resolve(context);
-
-                if (module is null)
+                try
                 {
-                    continue;
-                }
+                    var assembly = new PEFile(file, PEStreamOptions.PrefetchMetadata);
 
-                yield return module;
+                    var moduleReference = (IModuleReference)assembly;
+
+                    var module = moduleReference.Resolve(context);
+
+                    if (module is null)
+                    {
+                        continue;
+                    }
+
+                    outputList.Add(module);
+                }
+                catch (PEFileNotSupportedException)
+                {
+                }
             }
+
+            return outputList;
         }
 
         private static IEnumerable<IModule> GetModules(FilesGroup input, ITypeResolveContext context)
         {
+            var outputList = new List<IModule>();
             foreach (var file in input.GetAllFileNames())
             {
-                if (!AssemblyHelpers.AssemblyFileExtensionsSet.Contains(Path.GetExtension(file)))
+                try
                 {
-                    continue;
+                    if (!AssemblyHelpers.AssemblyFileExtensionsSet.Contains(Path.GetExtension(file)))
+                    {
+                        continue;
+                    }
+
+                    var peFile = new PEFile(file, PEStreamOptions.PrefetchMetadata);
+
+                    var moduleReference = (IModuleReference)peFile;
+
+                    var module = moduleReference.Resolve(context);
+
+                    if (module is null)
+                    {
+                        continue;
+                    }
+
+                    outputList.Add(module);
                 }
-
-                var peFile = new PEFile(file, PEStreamOptions.PrefetchMetadata);
-
-                var moduleReference = (IModuleReference)peFile;
-
-                var module = moduleReference.Resolve(context);
-
-                if (module is null)
+                catch (PEFileNotSupportedException)
                 {
-                    continue;
                 }
-
-                yield return module;
             }
+
+            return outputList;
         }
 
         private static void HandleModules(IEnumerable<IModule> modules, HashSet<string> seenAssemblies, IList<IModule> target)
