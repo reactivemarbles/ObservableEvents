@@ -2,7 +2,7 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.Generic;
+using System;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -18,7 +18,8 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators.Gener
         /// Generates a compilation unit based on generating event observable wrappers.
         /// </summary>
         /// <param name="item">The symbol to generate for.</param>
+        /// <param name="getSymbolOf">Gets the symbol of a given type name.</param>
         /// <returns>The new compilation unit.</returns>
-        NamespaceDeclarationSyntax? Generate(INamedTypeSymbol item);
+        NamespaceDeclarationSyntax? Generate(INamedTypeSymbol item, Func<string, ITypeSymbol?> getSymbolOf);
     }
 }

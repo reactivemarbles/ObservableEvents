@@ -2,6 +2,7 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -20,7 +21,7 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators.Gener
     internal abstract class EventGeneratorBase : IEventSymbolGenerator
     {
         /// <inheritdoc />
-        public abstract NamespaceDeclarationSyntax? Generate(INamedTypeSymbol item);
+        public abstract NamespaceDeclarationSyntax? Generate(INamedTypeSymbol item, Func<string, ITypeSymbol?> getSymbolOf);
 
         /// <summary>
         /// Generates an observable declaration that wraps a event.

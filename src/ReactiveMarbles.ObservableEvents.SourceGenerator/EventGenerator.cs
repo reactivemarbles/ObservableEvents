@@ -219,7 +219,7 @@ namespace ReactiveMarbles.ObservableEvents
 
                 processedItems.Add(item);
 
-                var namespaceItem = symbolGenerator.Generate(item);
+                var namespaceItem = symbolGenerator.Generate(item, context.Compilation.GetTypeByMetadataName);
 
                 if (namespaceItem == null)
                 {

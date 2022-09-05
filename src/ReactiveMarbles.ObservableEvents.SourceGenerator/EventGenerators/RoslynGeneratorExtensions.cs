@@ -4,13 +4,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Globalization;
 using System.Linq;
 using System.Text;
 
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 using static ReactiveMarbles.ObservableEvents.SourceGenerator.SyntaxFactoryHelpers;
@@ -86,7 +84,7 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators
             }
         }
 
-        public static IEnumerable<IEventSymbol> GetEvents(this INamedTypeSymbol item, bool staticEvents = false, bool includeInherited = true)
+        public static IEnumerable<IEventSymbol> GetEvents(this INamedTypeSymbol item, Func<string, ITypeSymbol?> getSymbolOf, bool staticEvents = false, bool includeInherited = true)
         {
             var baseClassWithEvents = includeInherited ? item.GetBasesWithCondition(RoslynHelpers.HasEvents) : Array.Empty<INamedTypeSymbol>();
 
@@ -132,17 +130,17 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators
 
                     var invokeMethod = ((INamedTypeSymbol)eventSymbol.OriginalDefinition.Type).DelegateInvokeMethod;
 
-                    if (invokeMethod == null)
+                    if (invokeMethod == null || ((invokeMethod.ReturnType as INamedTypeSymbol)?.IsGenericType ?? false))
                     {
                         continue;
                     }
 
-                    if (invokeMethod.ReturnType.SpecialType != SpecialType.System_Void)
+                    if (invokeMethod.ReturnType.SpecialType == SpecialType.System_Void ||
+                        SymbolEqualityComparer.Default.Equals(invokeMethod.ReturnType, getSymbolOf("System.Threading.Tasks.Task")) ||
+                        SymbolEqualityComparer.Default.Equals(invokeMethod.ReturnType, getSymbolOf("System.Threading.Tasks.ValueTask")))
                     {
-                        continue;
+                        yield return eventSymbol;
                     }
-
-                    yield return eventSymbol;
                 }
             }
         }
