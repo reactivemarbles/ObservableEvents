@@ -598,11 +598,11 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator
         public static LocalDeclarationStatementSyntax LocalDeclarationStatement(VariableDeclarationSyntax declaration) => SyntaxFactory.LocalDeclarationStatement(default, default, default, default, declaration, Token(SyntaxKind.SemicolonToken));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static LocalFunctionStatementSyntax LocalFunctionStatement(string returnType, string functionName, IReadOnlyCollection<ParameterSyntax>? parameters, ArrowExpressionClauseSyntax expressionBody)
+        public static LocalFunctionStatementSyntax LocalFunctionStatement(string returnType, string functionName, IReadOnlyCollection<ParameterSyntax>? parameters, ArrowExpressionClauseSyntax? expressionBody = default, BlockSyntax? blockSyntax = default)
         {
             var parameterList = ParameterList(parameters);
 
-            return SyntaxFactory.LocalFunctionStatement(default, default, IdentifierName(returnType).AddTrialingSpaces(), Identifier(functionName), default, parameterList, default, default, expressionBody, Token(SyntaxKind.SemicolonToken));
+            return SyntaxFactory.LocalFunctionStatement(default, default, IdentifierName(returnType).AddTrialingSpaces(), Identifier(functionName), default, parameterList, default, blockSyntax, expressionBody, Token(SyntaxKind.SemicolonToken));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

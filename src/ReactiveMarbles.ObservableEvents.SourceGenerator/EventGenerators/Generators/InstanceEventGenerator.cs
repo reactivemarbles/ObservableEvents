@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 
 using Microsoft.CodeAnalysis;
@@ -20,15 +19,15 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators.Gener
         private const string DataFieldName = "_data";
 
         /// <inheritdoc />
-        public override NamespaceDeclarationSyntax? Generate(INamedTypeSymbol item)
+        public override NamespaceDeclarationSyntax? Generate(INamedTypeSymbol item, Func<string, ITypeSymbol?> getSymbolOf)
         {
             var namespaceName = item.ContainingNamespace.ToDisplayString(RoslynHelpers.SymbolDisplayFormat);
 
-            var eventWrapperes = GenerateEventWrapperClasses(item, item.GetEvents().ToArray()).ToList();
+            var eventWrapperes = GenerateEventWrapperClasses(item, item.GetEvents(getSymbolOf).ToArray()).ToList();
 
             if (eventWrapperes.Count > 0)
             {
-               return NamespaceDeclaration(namespaceName, eventWrapperes, true);
+                return NamespaceDeclaration(namespaceName, eventWrapperes, true);
             }
 
             return null;

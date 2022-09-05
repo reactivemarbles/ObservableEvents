@@ -3,9 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
-using System.Reactive;
-using System.Text;
+using System.Threading.Tasks;
 
 using ReactiveMarbles.ObservableEvents;
 
@@ -37,6 +35,18 @@ namespace ReactiveMarbles.ObservableEvents
         public MyNoEventsClass()
         {
             this.Events();
+        }
+    }
+
+    public class AsyncEventsClass
+    {
+        public event Func<int, Task> TestEvent1;
+        public event Func<int, ValueTask> TestEvent2;
+
+        public AsyncEventsClass()
+        {
+            var e1 = this.Events().TestEvent1;
+            var e2 = this.Events().TestEvent2;
         }
     }
 

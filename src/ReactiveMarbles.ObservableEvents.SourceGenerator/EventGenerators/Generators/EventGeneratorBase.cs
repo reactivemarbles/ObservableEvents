@@ -2,10 +2,10 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -20,7 +20,7 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators.Gener
     internal abstract class EventGeneratorBase : IEventSymbolGenerator
     {
         /// <inheritdoc />
-        public abstract NamespaceDeclarationSyntax? Generate(INamedTypeSymbol item);
+        public abstract NamespaceDeclarationSyntax? Generate(INamedTypeSymbol item, Func<string, ITypeSymbol?> getSymbolOf);
 
         /// <summary>
         /// Generates an observable declaration that wraps a event.
@@ -66,8 +66,6 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators.Gener
                 return default;
             }
 
-            var returnType = IdentifierName(eventSymbol.Type.GenerateFullGenericName());
-
             // If we are using a standard approach of using 2 parameters only send the "Value", not the sender.
             if (invokeMethod.Parameters.Length == 2 && invokeMethod.Parameters[0].Type.GenerateFullGenericName() == "object")
             {
@@ -91,13 +89,10 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators.Gener
 
             var eventName = eventSymbol.Name;
 
-            var localFunctionExpression = GenerateLocalHandler(methodParametersArgumentList, invokeMethod, "obs.OnNext");
+            var localFunctionExpression = GenerateLocalHandler(methodParametersArgumentList, invokeMethod, "obs.OnNext", invokeMethod.ReturnType);
 
             ////// Produces lambda expression: eventHandler => (local function above); return Handler;
             ////var conversionLambdaExpression = SimpleLambdaExpression(Parameter("eventHandler"), Block(new StatementSyntax[] { localFunctionExpression, ReturnStatement("Handler") }, 3));
-
-            // Produces type parameters: <EventArg1Type, EventArg2Type>
-            var fromEventTypeParameters = new[] { returnType, eventArgsType };
 
             var conversionLambdaExpression = SimpleLambdaExpression(Parameter("obs"), Block(
                 new StatementSyntax[]
@@ -129,15 +124,42 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators.Gener
             return (expression, eventArgsType.GenerateObservableType());
         }
 
-        private static LocalFunctionStatementSyntax GenerateLocalHandler(IReadOnlyCollection<ArgumentSyntax> methodParametersArgumentList, IMethodSymbol invokeMethod, string handlerName) =>
+        private static LocalFunctionStatementSyntax GenerateLocalHandler(IReadOnlyCollection<ArgumentSyntax> methodParametersArgumentList, IMethodSymbol invokeMethod, string handlerName, ITypeSymbol returnType) =>
 
             // Produces local function: void Handler(DataType1 eventParam1, DataType2 eventParam2) => eventHandler(eventParam1, eventParam2)
             LocalFunctionStatement(
-                "void",
+                returnType.GenerateFullGenericName(),
                 "Handler",
                 invokeMethod.GenerateMethodParameters(),
-                ArrowExpressionClause(
-                        InvocationExpression(handlerName, methodParametersArgumentList)));
+                returnType.SpecialType == SpecialType.System_Void ? GenerateArrowExpressionClauseForSyncronousHandler(handlerName, methodParametersArgumentList) : default,
+                returnType.SpecialType != SpecialType.System_Void ? GetBlockSyntaxForAsynconousHandler(handlerName, methodParametersArgumentList, returnType) : default);
+
+        private static ArrowExpressionClauseSyntax GenerateArrowExpressionClauseForSyncronousHandler(string handlerName, IReadOnlyCollection<ArgumentSyntax> methodParametersArgumentList) =>
+            ArrowExpressionClause(InvocationExpression(handlerName, methodParametersArgumentList));
+
+        private static BlockSyntax GetBlockSyntaxForAsynconousHandler(string handlerName, IReadOnlyCollection<ArgumentSyntax> methodParametersArgumentList, ITypeSymbol returnType) =>
+            Block(
+                new StatementSyntax[]
+                {
+                    ExpressionStatement(
+                        InvocationExpression(handlerName, methodParametersArgumentList)),
+                    ReturnStatement(GetExpressionSyntax(returnType))
+                },
+                3);
+
+        private static ExpressionSyntax GetExpressionSyntax(ITypeSymbol returnType)
+        {
+            if (returnType.Name == nameof(Task))
+            {
+                return MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, returnType.GenerateFullGenericName(), IdentifierName("CompletedTask"));
+            }
+            else if (returnType.Name == nameof(ValueTask))
+            {
+                return SyntaxFactory.DefaultExpression(IdentifierName(returnType.GenerateFullGenericName()));
+            }
+
+            throw new NotSupportedException($"The return type of {returnType.GenerateFullGenericName()} is not supported!");
+        }
 
         private static AssignmentExpressionSyntax GenerateEventAssignment(SyntaxKind accessor, string eventName, string dataObjectName, string handlerName)
         {

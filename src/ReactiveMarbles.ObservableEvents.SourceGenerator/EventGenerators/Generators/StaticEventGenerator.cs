@@ -17,13 +17,13 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators.Gener
     internal class StaticEventGenerator : EventGeneratorBase
     {
         /// <inheritdoc />
-        public override NamespaceDeclarationSyntax? Generate(INamedTypeSymbol item)
+        public override NamespaceDeclarationSyntax? Generate(INamedTypeSymbol item, Func<string, ITypeSymbol?> getSymbolOf)
         {
             var eventWrapperMembers = new List<PropertyDeclarationSyntax>();
 
             var namespaceName = item.ContainingNamespace.ToDisplayString(RoslynHelpers.SymbolDisplayFormat);
 
-            foreach (var eventDetail in item.GetEvents(true))
+            foreach (var eventDetail in item.GetEvents(getSymbolOf, true))
             {
                 var eventWrapper = GenerateEventWrapperObservable(eventDetail, item.GenerateFullGenericName(), item.Name);
 
