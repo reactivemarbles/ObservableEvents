@@ -106,7 +106,7 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators.Gener
                             Argument(ParenthesizedLambdaExpression(GenerateEventAssignment(SyntaxKind.SubtractAssignmentExpression, eventName, dataObjectName, "Handler")))
                         })),
                 },
-                3));
+                2));
 
             // Produces: => global::System.Reactive.Linq.Observable.Create<TypeParameter>(obs =>
             // {
