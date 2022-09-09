@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
-
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -136,8 +136,8 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators
                     }
 
                     if (invokeMethod.ReturnType.SpecialType == SpecialType.System_Void ||
-                        SymbolEqualityComparer.Default.Equals(invokeMethod.ReturnType, getSymbolOf("System.Threading.Tasks.Task")) ||
-                        SymbolEqualityComparer.Default.Equals(invokeMethod.ReturnType, getSymbolOf("System.Threading.Tasks.ValueTask")))
+                        SymbolEqualityComparer.Default.Equals(invokeMethod.ReturnType, getSymbolOf(typeof(Task).FullName)) ||
+                        SymbolEqualityComparer.Default.Equals(invokeMethod.ReturnType, getSymbolOf(typeof(ValueTask).FullName)))
                     {
                         yield return eventSymbol;
                     }
