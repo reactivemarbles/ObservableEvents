@@ -33,7 +33,7 @@ jobs:
 
     - name: NBGV
       id: nbgv
-      uses: dotnet/nbgv@master
+      uses: dotnet/nbgv@main
       with:
         setAllVars: true
 
