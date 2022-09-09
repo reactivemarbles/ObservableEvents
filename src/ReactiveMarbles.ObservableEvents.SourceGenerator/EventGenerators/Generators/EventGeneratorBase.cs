@@ -151,7 +151,7 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators.Gener
         {
             if (returnType.Name == nameof(Task))
             {
-                return MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, returnType.GenerateFullGenericName(), IdentifierName("CompletedTask"));
+                return MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, returnType.GenerateFullGenericName(), IdentifierName(nameof(Task.CompletedTask)));
             }
             else if (returnType.Name == nameof(ValueTask))
             {
