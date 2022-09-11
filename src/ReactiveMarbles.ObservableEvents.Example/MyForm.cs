@@ -54,4 +54,14 @@ namespace ReactiveMarbles.ObservableEvents
     {
         public static event EventHandler? TestChanged;
     }
+
+    public class GenericTestClass<TGenericType>
+    {
+        public event EventHandler<TGenericType> TestChanged;
+
+        public GenericTestClass()
+        {
+            var events = this.Events().TestChanged;
+        }
+    }
 }
