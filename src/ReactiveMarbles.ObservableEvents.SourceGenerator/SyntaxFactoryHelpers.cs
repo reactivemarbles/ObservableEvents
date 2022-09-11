@@ -651,6 +651,10 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator
             MethodDeclaration(attributes, modifiers, IdentifierName(typeName), default, identifier, parameters, default, default, default, body, level);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static MethodDeclarationSyntax MethodDeclaration(IReadOnlyCollection<AttributeListSyntax>? attributes, IReadOnlyCollection<SyntaxKind>? modifiers, TypeSyntax typeName, string identifier, IReadOnlyCollection<ParameterSyntax>? parameters, IReadOnlyCollection<TypeParameterSyntax>? typeParameters, int level, ArrowExpressionClauseSyntax body) =>
+            MethodDeclaration(attributes, modifiers, typeName, default, identifier, parameters, default, typeParameters, default, body, level);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static MethodDeclarationSyntax MethodDeclaration(IReadOnlyCollection<AttributeListSyntax>? attributes, IReadOnlyCollection<SyntaxKind>? modifiers, TypeSyntax type, string identifier, IReadOnlyCollection<ParameterSyntax>? parameters, int level, BlockSyntax body) =>
             MethodDeclaration(attributes, modifiers, type, default, identifier, parameters, default, default, body, default, level);
 
@@ -757,6 +761,13 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator
         {
             var argumentList = ArgumentList(arguments);
             return SyntaxFactory.ObjectCreationExpression(Token(SyntaxKind.NewKeyword).AddTrialingSpaces(), type, argumentList, initializer);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ObjectCreationExpressionSyntax ObjectCreationExpression(TypeSyntax type, IReadOnlyCollection<ArgumentSyntax> arguments)
+        {
+            var argumentList = ArgumentList(arguments);
+            return SyntaxFactory.ObjectCreationExpression(Token(SyntaxKind.NewKeyword).AddTrialingSpaces(), type, argumentList, default);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
