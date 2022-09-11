@@ -93,6 +93,7 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators.Gener
                     obsoleteList,
                     new[] { SyntaxKind.InternalKeyword },
                     members.Concat(properties).ToList(),
+                    typeDefinition.GetGenericTypeParameters(),
                     1);
             }
         }
