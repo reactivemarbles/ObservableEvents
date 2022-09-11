@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using Microsoft.CodeAnalysis;
@@ -59,6 +60,26 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators
             }
 
             return Array.Empty<AttributeListSyntax>();
+        }
+
+        public static IReadOnlyCollection<TypeParameterSyntax> GetGenericTypeParameters(
+            this INamedTypeSymbol typeSymbol)
+        {
+            return typeSymbol.TypeParameters
+                .Select(typeParameterSymbol => typeParameterSymbol.Name)
+                .Select(TypeParameter)
+                .ToList()
+                .AsReadOnly();
+        }
+
+        public static IReadOnlyCollection<TypeSyntax> GetGenericTypes(
+            this INamedTypeSymbol typeSymbol)
+        {
+            return typeSymbol.TypeParameters
+                .Select(typeParameterSymbol => typeParameterSymbol.Name)
+                .Select(name => SyntaxFactory.ParseTypeName(name))
+                .ToList()
+                .AsReadOnly();
         }
     }
 }
