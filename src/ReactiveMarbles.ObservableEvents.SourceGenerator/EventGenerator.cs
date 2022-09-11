@@ -119,7 +119,8 @@ namespace ReactiveMarbles.ObservableEvents
                 return;
             }
 
-            context.AddSource("TestExtensions.FoundEvents.SourceGenerated.cs", SourceText.From(compilationUnit.ToFullString(), Encoding.UTF8));
+            string sourceText = compilationUnit.ToFullString();
+            context.AddSource("TestExtensions.FoundEvents.SourceGenerated.cs", SourceText.From(sourceText, Encoding.UTF8));
         }
 
         private static void GetAvailableTypes(
@@ -237,7 +238,9 @@ namespace ReactiveMarbles.ObservableEvents
 
                 var sourceText = compilationUnit.ToFullString();
 
-                var name = $"SourceClass{item.ToDisplayString(RoslynHelpers.SymbolDisplayFormat)}-{fileType}Events.SourceGenerated.cs";
+                SymbolDisplayFormat fileNameFormat = RoslynHelpers.SymbolDisplayFormat.WithGenericsOptions(SymbolDisplayGenericsOptions.None);
+                string genericHint = item.IsGenericType ? $"-{string.Join("-", item.TypeParameters.Select(type => type.Name))}" : string.Empty;
+                var name = $"SourceClass{item.ToDisplayString(fileNameFormat)}{genericHint}-{fileType}Events.SourceGenerated.cs";
 
                 context.AddSource(
                     name,
