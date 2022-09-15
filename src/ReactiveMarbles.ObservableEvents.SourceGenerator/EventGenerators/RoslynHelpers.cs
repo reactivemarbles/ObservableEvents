@@ -97,12 +97,12 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators
             return typeSymbol.TypeParameters
                 .Select(tp => (
                     tp.Name,
-                    constraints: tp.GetOtherConstrainst()
+                    Constraints: tp.GetOtherConstrainst()
                         .Concat(tp.ConstraintTypes.Select(GetAsTypeConstraint))
                         .Select(tpc => tpc.WithTrailingTrivia(SyntaxFactory.Space).WithoutLeadingTrivia())
                         .ToArray()))
-                .Where(tp => tp.constraints.Length > 0)
-                .Select(tp => TypeParameterConstraintClause(tp.Name, tp.constraints))
+                .Where(tp => tp.Constraints.Length > 0)
+                .Select(tp => TypeParameterConstraintClause(tp.Name, tp.Constraints))
                 .ToArray();
         }
 
@@ -129,7 +129,7 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators
         {
             if (typeSymbol is INamedTypeSymbol namedTypeSymbol && namedTypeSymbol.TypeArguments.Any())
             {
-                return TypeConstraint(typeSymbol.GetTypeSyntax(
+                return TypeConstraint(namedTypeSymbol.GetTypeSyntax(
                     genericTypeParameters: namedTypeSymbol.TypeArguments
                         .Select(tp => tp.GenerateFullGenericName())
                         .Select(IdentifierName)
@@ -147,22 +147,6 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators
                 .Select(tp => tp.Name)
                 .Select(parseName)
                 .ToArray();
-        }
-
-        private static IReadOnlyCollection<T> GetTypeArgumentsAs<T>(
-            this INamedTypeSymbol typeSymbol,
-            Func<string, T> parseName)
-        {
-            return typeSymbol.TypeArguments
-                .Select(tp => tp.Name)
-                .Select(parseName)
-                .ToArray();
-        }
-
-        private static IEnumerable<T> NotNull<T>(this IEnumerable<T?> source)
-        {
-            return source.Where(item => item is not null)
-                .Select(item => item!);
         }
     }
 }
