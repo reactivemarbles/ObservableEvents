@@ -244,7 +244,7 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ClassDeclarationSyntax ClassDeclaration(string identifier, IReadOnlyCollection<AttributeListSyntax>? attributes, IReadOnlyCollection<SyntaxKind>? modifiers, IReadOnlyCollection<MemberDeclarationSyntax>? members, IReadOnlyCollection<BaseTypeSyntax> bases, int level) =>
-            ClassDeclaration(identifier, default, modifiers, members, default, default, bases, level);
+            ClassDeclaration(identifier, attributes, modifiers, members, default, default, bases, level);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ClassDeclarationSyntax ClassDeclaration(string identifier, IReadOnlyCollection<AttributeListSyntax>? attributes, IReadOnlyCollection<SyntaxKind>? modifiers, IReadOnlyCollection<MemberDeclarationSyntax>? members, int level) =>
