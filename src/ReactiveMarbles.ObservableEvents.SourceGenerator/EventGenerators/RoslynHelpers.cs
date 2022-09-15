@@ -64,24 +64,36 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators
             return Array.Empty<AttributeListSyntax>();
         }
 
-        public static IReadOnlyCollection<TypeParameterSyntax> GetGenericTypeParameters(
+        public static IReadOnlyCollection<TypeParameterSyntax> GetTypeParametersAsTypeParameterSyntax(
             this INamedTypeSymbol typeSymbol)
         {
-            return typeSymbol.TypeParameters
-                .Select(typeParameterSymbol => typeParameterSymbol.Name)
-                .Select(TypeParameter)
-                .ToList()
-                .AsReadOnly();
+            return typeSymbol.GetTypeParametersAs(TypeParameter);
         }
 
-        public static IReadOnlyCollection<TypeSyntax> GetGenericTypes(
+        public static IReadOnlyCollection<TypeSyntax> GetTypeParametersAsTypeSyntax(
             this INamedTypeSymbol typeSymbol)
         {
+            return typeSymbol.GetTypeParametersAs(name => SyntaxFactory.ParseTypeName(name));
+        }
+
+        public static TypeSyntax GetGenericTypeSyntax(
+            this INamedTypeSymbol typeSymbol,
+            string? newName = null)
+        {
+            string typeName = newName ?? typeSymbol.ToDisplayString(TypeFormat);
+            return typeSymbol.TypeParameters.Any() ?
+                GenericName(typeName, typeSymbol.GetTypeParametersAsTypeSyntax()) :
+                IdentifierName(typeName);
+        }
+
+        private static IReadOnlyCollection<T> GetTypeParametersAs<T>(
+            this INamedTypeSymbol typeSymbol,
+            Func<string, T> parseName)
+        {
             return typeSymbol.TypeParameters
-                .Select(typeParameterSymbol => typeParameterSymbol.Name)
-                .Select(name => SyntaxFactory.ParseTypeName(name))
-                .ToList()
-                .AsReadOnly();
+                .Select(tp => tp.Name)
+                .Select(parseName)
+                .ToArray();
         }
     }
 }
