@@ -255,6 +255,10 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator
             ClassDeclaration(identifier, attributes, modifiers, members, default, typeParameters, default, level);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ClassDeclarationSyntax ClassDeclaration(string identifier, IReadOnlyCollection<AttributeListSyntax>? attributes, IReadOnlyCollection<SyntaxKind>? modifiers, IReadOnlyCollection<MemberDeclarationSyntax>? members, IReadOnlyCollection<TypeParameterConstraintClauseSyntax>? typeParameterConstraintClauses, IReadOnlyCollection<TypeParameterSyntax>? typeParameters, int level) =>
+            ClassDeclaration(identifier, attributes, modifiers, members, typeParameterConstraintClauses, typeParameters, default, level);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ClassDeclarationSyntax ClassDeclaration(string identifier, IReadOnlyCollection<AttributeListSyntax>? attributes, IReadOnlyCollection<SyntaxKind>? modifiers, IReadOnlyCollection<MemberDeclarationSyntax>? members, IReadOnlyCollection<TypeParameterConstraintClauseSyntax>? typeParameterConstraintClauses, IReadOnlyCollection<TypeParameterSyntax>? typeParameters, IReadOnlyCollection<BaseTypeSyntax>? bases, int level)
         {
             var classSyntax = Token(SyntaxKind.ClassKeyword);
