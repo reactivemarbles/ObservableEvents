@@ -813,6 +813,9 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator
         public static ParameterSyntax Parameter(TypeSyntax type, string name) => Parameter(default, default, type.AddTrialingSpaces(), name, null);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ParameterSyntax Parameter(TypeSyntax type, string name, IReadOnlyCollection<SyntaxKind> modifier) => Parameter(default, modifier, type.AddTrialingSpaces(), name, null);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ParameterSyntax Parameter(IReadOnlyCollection<AttributeListSyntax>? attributes, IReadOnlyCollection<SyntaxKind>? modifiers, TypeSyntax? type, string identifier, EqualsValueClauseSyntax? equals)
         {
             var name = SyntaxFactory.Identifier(identifier);
