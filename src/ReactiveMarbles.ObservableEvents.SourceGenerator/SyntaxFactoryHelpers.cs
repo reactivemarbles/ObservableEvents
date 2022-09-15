@@ -659,6 +659,10 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator
             MethodDeclaration(attributes, modifiers, typeName, default, identifier, parameters, default, typeParameters, default, body, level);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static MethodDeclarationSyntax MethodDeclaration(IReadOnlyCollection<AttributeListSyntax>? attributes, IReadOnlyCollection<SyntaxKind>? modifiers, TypeSyntax typeName, string identifier, IReadOnlyCollection<ParameterSyntax>? parameters, IReadOnlyCollection<TypeParameterConstraintClauseSyntax>? typeParameterConstraintClauses, IReadOnlyCollection<TypeParameterSyntax>? typeParameters, int level, ArrowExpressionClauseSyntax body) =>
+            MethodDeclaration(attributes, modifiers, typeName, default, identifier, parameters, typeParameterConstraintClauses, typeParameters, default, body, level);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static MethodDeclarationSyntax MethodDeclaration(IReadOnlyCollection<AttributeListSyntax>? attributes, IReadOnlyCollection<SyntaxKind>? modifiers, TypeSyntax type, string identifier, IReadOnlyCollection<ParameterSyntax>? parameters, int level, BlockSyntax body) =>
             MethodDeclaration(attributes, modifiers, type, default, identifier, parameters, default, default, body, default, level);
 
