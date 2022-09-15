@@ -203,23 +203,14 @@ namespace ReactiveMarbles.ObservableEvents
                 return true;
             }
 
-            var processedItems = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
-
             var fileType = isStatic ? "Static" : "Instance";
 
             var rootContainingSymbols = symbols.Select(x => x.NamedType).ToImmutableSortedSet(TypeDefinitionNameComparer.Default);
 
             bool hasEvents = false;
 
-            foreach (var (location, item) in symbols)
-            {
-                if (processedItems.Contains(item))
+            foreach (var item in rootContainingSymbols)
                 {
-                    continue;
-                }
-
-                processedItems.Add(item);
-
                 var namespaceItem = symbolGenerator.Generate(item, context.Compilation.GetTypeByMetadataName);
 
                 if (namespaceItem == null)
