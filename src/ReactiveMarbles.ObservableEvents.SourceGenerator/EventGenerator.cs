@@ -163,6 +163,11 @@ namespace ReactiveMarbles.ObservableEvents
                     continue;
                 }
 
+                if (callingSymbol.IsGenericType)
+                {
+                    callingSymbol = callingSymbol.OriginalDefinition;
+                }
+
                 var location = Location.Create(invocation.SyntaxTree, invocation.Span);
 
                 instanceNamespaceList.Add((location, callingSymbol));
