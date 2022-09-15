@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 
 using ReactiveMarbles.ObservableEvents;
@@ -55,13 +56,35 @@ namespace ReactiveMarbles.ObservableEvents
         public static event EventHandler? TestChanged;
     }
 
-    public class GenericTestClass<TGenericType>
+    public class GenericTestClass<TGenericType, TGen2>
     {
         public event EventHandler<TGenericType> TestChanged;
 
         public GenericTestClass()
         {
             var events = this.Events().TestChanged;
+        }
+    }
+
+    public class SecondGenericTextClass<TGen> : GenericTestClass<AsyncEventsClass, TGen>
+    {
+        public event EventHandler TestChanged2;
+
+        public SecondGenericTextClass()
+        {
+            var events = this.Events().TestChanged;
+        }
+    }
+
+    public class GenericClassesTestClass
+    {
+        public GenericClassesTestClass()
+        {
+            var colInt = new ObservableCollection<int>();
+            colInt.Events();
+
+            var col = new ObservableCollection<AsyncEventsClass>();
+            col.Events();
         }
     }
 }
