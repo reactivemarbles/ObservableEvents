@@ -45,7 +45,7 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators.Gener
                 },
                 2);
 
-            return ConstructorDeclaration(default, new[] { SyntaxKind.PublicKeyword }, new[] { Parameter(typeDefinition.GetGenericTypeSyntax(), dataParameterName) }, className, constructorBlock, 1)
+            return ConstructorDeclaration(default, new[] { SyntaxKind.PublicKeyword }, new[] { Parameter(typeDefinition.GetTypeSyntax(), dataParameterName) }, className, constructorBlock, 1)
                 .WithLeadingTrivia(
                     XmlSyntaxFactory.GenerateSummarySeeAlsoComment("Initializes a new instance of the {0} class.", className, (dataParameterName, "The class that is being wrapped.")));
         }
@@ -53,7 +53,7 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators.Gener
         private static FieldDeclarationSyntax GenerateEventWrapperField(INamedTypeSymbol typeDefinition)
         {
             return FieldDeclaration(
-                typeDefinition.GetGenericTypeSyntax(),
+                typeDefinition.GetTypeSyntax(),
                 DataFieldName,
                 new[] { SyntaxKind.PrivateKeyword, SyntaxKind.ReadOnlyKeyword },
                 1);
@@ -93,6 +93,7 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators.Gener
                     obsoleteList,
                     new[] { SyntaxKind.InternalKeyword },
                     members.Concat(properties).ToList(),
+                    typeDefinition.GetTypeParameterConstraints(),
                     typeDefinition.GetTypeParametersAsTypeParameterSyntax(),
                     1);
             }

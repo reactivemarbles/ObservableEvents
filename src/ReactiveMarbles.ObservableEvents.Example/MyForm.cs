@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.ObjectModel;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 
 using ReactiveMarbles.ObservableEvents;
@@ -66,7 +67,7 @@ namespace ReactiveMarbles.ObservableEvents
         }
     }
 
-    public class SecondGenericTextClass<TGen> : GenericTestClass<AsyncEventsClass, TGen>
+    public class SecondGenericTextClass<TGen3> : GenericTestClass<AsyncEventsClass, TGen3>
     {
         public event EventHandler TestChanged2;
 
@@ -85,6 +86,19 @@ namespace ReactiveMarbles.ObservableEvents
 
             var col = new ObservableCollection<AsyncEventsClass>();
             col.Events();
+        }
+    }
+
+    public class GenericConstraintsTestClass<TGen, TGen2, TGen3>
+        where TGen : AsyncEventsClass
+        where TGen2 : SecondGenericTextClass<TGen>
+        where TGen3 : class, new()
+    {
+        public event EventHandler<TGen2> TestChanged;
+
+        public GenericConstraintsTestClass()
+        {
+            var events = this.Events().TestChanged;
         }
     }
 }

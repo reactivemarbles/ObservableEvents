@@ -76,14 +76,67 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators
             return typeSymbol.GetTypeParametersAs(name => SyntaxFactory.ParseTypeName(name));
         }
 
-        public static TypeSyntax GetGenericTypeSyntax(
-            this INamedTypeSymbol typeSymbol,
-            string? newName = null)
+        public static TypeSyntax GetTypeSyntax(
+            this ITypeSymbol typeSymbol,
+            string? newName = null,
+            IReadOnlyCollection<TypeSyntax>? genericTypeParameters = null)
         {
             string typeName = newName ?? typeSymbol.ToDisplayString(TypeFormat);
-            return typeSymbol.TypeParameters.Any() ?
-                GenericName(typeName, typeSymbol.GetTypeParametersAsTypeSyntax()) :
-                IdentifierName(typeName);
+
+            if (typeSymbol is INamedTypeSymbol namedTypeSymbol && namedTypeSymbol.TypeParameters.Any())
+            {
+                return GenericName(typeName, genericTypeParameters ?? namedTypeSymbol.GetTypeParametersAsTypeSyntax());
+            }
+
+            return IdentifierName(typeName);
+        }
+
+        public static IReadOnlyCollection<TypeParameterConstraintClauseSyntax> GetTypeParameterConstraints(
+            this INamedTypeSymbol typeSymbol)
+        {
+            return typeSymbol.TypeParameters
+                .Select(tp => (
+                    tp.Name,
+                    constraints: tp.GetOtherConstrainst()
+                        .Concat(tp.ConstraintTypes.Select(GetAsTypeConstraint))
+                        .Select(tpc => tpc.WithTrailingTrivia(SyntaxFactory.Space).WithoutLeadingTrivia())
+                        .ToArray()))
+                .Where(tp => tp.constraints.Length > 0)
+                .Select(tp => TypeParameterConstraintClause(tp.Name, tp.constraints))
+                .ToArray();
+        }
+
+        private static IEnumerable<TypeParameterConstraintSyntax> GetOtherConstrainst(
+            this ITypeParameterSymbol typeSymbol)
+        {
+            if (typeSymbol.HasReferenceTypeConstraint ||
+                typeSymbol.HasValueTypeConstraint)
+            {
+                yield return SyntaxFactory.ClassOrStructConstraint(
+                    typeSymbol.HasReferenceTypeConstraint ? SyntaxKind.ClassConstraint :
+                    typeSymbol.HasValueTypeConstraint ? SyntaxKind.StructConstraint :
+                    throw new InvalidOperationException());
+            }
+
+            if (typeSymbol.HasConstructorConstraint)
+            {
+                yield return SyntaxFactory.ConstructorConstraint();
+            }
+        }
+
+        private static TypeParameterConstraintSyntax GetAsTypeConstraint(
+            this ITypeSymbol typeSymbol)
+        {
+            if (typeSymbol is INamedTypeSymbol namedTypeSymbol && namedTypeSymbol.TypeArguments.Any())
+            {
+                return TypeConstraint(typeSymbol.GetTypeSyntax(
+                    genericTypeParameters: namedTypeSymbol.TypeArguments
+                        .Select(tp => tp.GenerateFullGenericName())
+                        .Select(IdentifierName)
+                        .ToArray()));
+            }
+
+            return TypeConstraint(typeSymbol.GetTypeSyntax());
         }
 
         private static IReadOnlyCollection<T> GetTypeParametersAs<T>(
@@ -94,6 +147,22 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators
                 .Select(tp => tp.Name)
                 .Select(parseName)
                 .ToArray();
+        }
+
+        private static IReadOnlyCollection<T> GetTypeArgumentsAs<T>(
+            this INamedTypeSymbol typeSymbol,
+            Func<string, T> parseName)
+        {
+            return typeSymbol.TypeArguments
+                .Select(tp => tp.Name)
+                .Select(parseName)
+                .ToArray();
+        }
+
+        private static IEnumerable<T> NotNull<T>(this IEnumerable<T?> source)
+        {
+            return source.Where(item => item is not null)
+                .Select(item => item!);
         }
     }
 }
