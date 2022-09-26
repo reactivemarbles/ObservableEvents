@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using Microsoft.CodeAnalysis;
@@ -23,7 +24,9 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators
 
         public static SymbolDisplayFormat SymbolDisplayFormat { get; } = new SymbolDisplayFormat(typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces, genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters | SymbolDisplayGenericsOptions.IncludeTypeConstraints | SymbolDisplayGenericsOptions.IncludeVariance);
 
-        public static SymbolDisplayFormat TypeFormat { get; } = new SymbolDisplayFormat(globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Included, typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces, genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters, miscellaneousOptions: SymbolDisplayMiscellaneousOptions.UseSpecialTypes);
+        public static SymbolDisplayFormat GenericTypeFormat { get; } = new SymbolDisplayFormat(globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Included, typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces, genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters, miscellaneousOptions: SymbolDisplayMiscellaneousOptions.UseSpecialTypes);
+
+        public static SymbolDisplayFormat TypeFormat { get; } = new SymbolDisplayFormat(globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Included, typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces, genericsOptions: SymbolDisplayGenericsOptions.None, miscellaneousOptions: SymbolDisplayMiscellaneousOptions.UseSpecialTypes);
 
         /// <summary>
         /// Gets an argument which access System.Reactive.Unit.Default member.
@@ -59,6 +62,91 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators
             }
 
             return Array.Empty<AttributeListSyntax>();
+        }
+
+        public static IReadOnlyCollection<TypeParameterSyntax> GetTypeParametersAsTypeParameterSyntax(
+            this INamedTypeSymbol typeSymbol)
+        {
+            return typeSymbol.GetTypeParametersAs(TypeParameter);
+        }
+
+        public static IReadOnlyCollection<TypeSyntax> GetTypeParametersAsTypeSyntax(
+            this INamedTypeSymbol typeSymbol)
+        {
+            return typeSymbol.GetTypeParametersAs(name => SyntaxFactory.ParseTypeName(name));
+        }
+
+        public static TypeSyntax GetTypeSyntax(
+            this ITypeSymbol typeSymbol,
+            string? newName = null,
+            IReadOnlyCollection<TypeSyntax>? genericTypeParameters = null)
+        {
+            string typeName = newName ?? typeSymbol.ToDisplayString(TypeFormat);
+
+            if (typeSymbol is INamedTypeSymbol namedTypeSymbol && namedTypeSymbol.TypeParameters.Any())
+            {
+                return GenericName(typeName, genericTypeParameters ?? namedTypeSymbol.GetTypeParametersAsTypeSyntax());
+            }
+
+            return IdentifierName(typeName);
+        }
+
+        public static IReadOnlyCollection<TypeParameterConstraintClauseSyntax> GetTypeParameterConstraints(
+            this INamedTypeSymbol typeSymbol)
+        {
+            return typeSymbol.TypeParameters
+                .Select(tp => (
+                    tp.Name,
+                    Constraints: tp.GetOtherConstrainst()
+                        .Concat(tp.ConstraintTypes.Select(GetAsTypeConstraint))
+                        .Select(tpc => tpc.WithTrailingTrivia(SyntaxFactory.Space).WithoutLeadingTrivia())
+                        .ToArray()))
+                .Where(tp => tp.Constraints.Length > 0)
+                .Select(tp => TypeParameterConstraintClause(tp.Name, tp.Constraints))
+                .ToArray();
+        }
+
+        private static IEnumerable<TypeParameterConstraintSyntax> GetOtherConstrainst(
+            this ITypeParameterSymbol typeSymbol)
+        {
+            if (typeSymbol.HasReferenceTypeConstraint ||
+                typeSymbol.HasValueTypeConstraint)
+            {
+                yield return SyntaxFactory.ClassOrStructConstraint(
+                    typeSymbol.HasReferenceTypeConstraint ? SyntaxKind.ClassConstraint :
+                    typeSymbol.HasValueTypeConstraint ? SyntaxKind.StructConstraint :
+                    throw new InvalidOperationException());
+            }
+
+            if (typeSymbol.HasConstructorConstraint)
+            {
+                yield return SyntaxFactory.ConstructorConstraint();
+            }
+        }
+
+        private static TypeParameterConstraintSyntax GetAsTypeConstraint(
+            this ITypeSymbol typeSymbol)
+        {
+            if (typeSymbol is INamedTypeSymbol namedTypeSymbol && namedTypeSymbol.TypeArguments.Any())
+            {
+                return TypeConstraint(namedTypeSymbol.GetTypeSyntax(
+                    genericTypeParameters: namedTypeSymbol.TypeArguments
+                        .Select(tp => tp.GenerateFullGenericName())
+                        .Select(IdentifierName)
+                        .ToArray()));
+            }
+
+            return TypeConstraint(typeSymbol.GetTypeSyntax());
+        }
+
+        private static IReadOnlyCollection<T> GetTypeParametersAs<T>(
+            this INamedTypeSymbol typeSymbol,
+            Func<string, T> parseName)
+        {
+            return typeSymbol.TypeParameters
+                .Select(tp => tp.Name)
+                .Select(parseName)
+                .ToArray();
         }
     }
 }

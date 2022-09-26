@@ -203,7 +203,7 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator.EventGenerators
         /// <returns>A type descriptor including the generic arguments.</returns>
         public static string GenerateFullGenericName(this ITypeSymbol currentType)
         {
-            return currentType.ToDisplayString(RoslynHelpers.TypeFormat);
+            return currentType.ToDisplayString(RoslynHelpers.GenericTypeFormat);
         }
 
         public static IEnumerable<INamedTypeSymbol> GetBasesWithCondition(this INamedTypeSymbol symbol, Func<INamedTypeSymbol, bool> condition)

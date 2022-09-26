@@ -244,7 +244,7 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ClassDeclarationSyntax ClassDeclaration(string identifier, IReadOnlyCollection<AttributeListSyntax>? attributes, IReadOnlyCollection<SyntaxKind>? modifiers, IReadOnlyCollection<MemberDeclarationSyntax>? members, IReadOnlyCollection<BaseTypeSyntax> bases, int level) =>
-            ClassDeclaration(identifier, default, modifiers, members, default, default, bases, level);
+            ClassDeclaration(identifier, attributes, modifiers, members, default, default, bases, level);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ClassDeclarationSyntax ClassDeclaration(string identifier, IReadOnlyCollection<AttributeListSyntax>? attributes, IReadOnlyCollection<SyntaxKind>? modifiers, IReadOnlyCollection<MemberDeclarationSyntax>? members, int level) =>
@@ -253,6 +253,10 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ClassDeclarationSyntax ClassDeclaration(string identifier, IReadOnlyCollection<AttributeListSyntax>? attributes, IReadOnlyCollection<SyntaxKind>? modifiers, IReadOnlyCollection<MemberDeclarationSyntax>? members, IReadOnlyCollection<TypeParameterSyntax>? typeParameters, int level) =>
             ClassDeclaration(identifier, attributes, modifiers, members, default, typeParameters, default, level);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ClassDeclarationSyntax ClassDeclaration(string identifier, IReadOnlyCollection<AttributeListSyntax>? attributes, IReadOnlyCollection<SyntaxKind>? modifiers, IReadOnlyCollection<MemberDeclarationSyntax>? members, IReadOnlyCollection<TypeParameterConstraintClauseSyntax>? typeParameterConstraintClauses, IReadOnlyCollection<TypeParameterSyntax>? typeParameters, int level) =>
+            ClassDeclaration(identifier, attributes, modifiers, members, typeParameterConstraintClauses, typeParameters, default, level);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ClassDeclarationSyntax ClassDeclaration(string identifier, IReadOnlyCollection<AttributeListSyntax>? attributes, IReadOnlyCollection<SyntaxKind>? modifiers, IReadOnlyCollection<MemberDeclarationSyntax>? members, IReadOnlyCollection<TypeParameterConstraintClauseSyntax>? typeParameterConstraintClauses, IReadOnlyCollection<TypeParameterSyntax>? typeParameters, IReadOnlyCollection<BaseTypeSyntax>? bases, int level)
@@ -651,6 +655,14 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator
             MethodDeclaration(attributes, modifiers, IdentifierName(typeName), default, identifier, parameters, default, default, default, body, level);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static MethodDeclarationSyntax MethodDeclaration(IReadOnlyCollection<AttributeListSyntax>? attributes, IReadOnlyCollection<SyntaxKind>? modifiers, TypeSyntax typeName, string identifier, IReadOnlyCollection<ParameterSyntax>? parameters, IReadOnlyCollection<TypeParameterSyntax>? typeParameters, int level, ArrowExpressionClauseSyntax body) =>
+            MethodDeclaration(attributes, modifiers, typeName, default, identifier, parameters, default, typeParameters, default, body, level);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static MethodDeclarationSyntax MethodDeclaration(IReadOnlyCollection<AttributeListSyntax>? attributes, IReadOnlyCollection<SyntaxKind>? modifiers, TypeSyntax typeName, string identifier, IReadOnlyCollection<ParameterSyntax>? parameters, IReadOnlyCollection<TypeParameterConstraintClauseSyntax>? typeParameterConstraintClauses, IReadOnlyCollection<TypeParameterSyntax>? typeParameters, int level, ArrowExpressionClauseSyntax body) =>
+            MethodDeclaration(attributes, modifiers, typeName, default, identifier, parameters, typeParameterConstraintClauses, typeParameters, default, body, level);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static MethodDeclarationSyntax MethodDeclaration(IReadOnlyCollection<AttributeListSyntax>? attributes, IReadOnlyCollection<SyntaxKind>? modifiers, TypeSyntax type, string identifier, IReadOnlyCollection<ParameterSyntax>? parameters, int level, BlockSyntax body) =>
             MethodDeclaration(attributes, modifiers, type, default, identifier, parameters, default, default, body, default, level);
 
@@ -760,6 +772,13 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ObjectCreationExpressionSyntax ObjectCreationExpression(TypeSyntax type, IReadOnlyCollection<ArgumentSyntax> arguments)
+        {
+            var argumentList = ArgumentList(arguments);
+            return SyntaxFactory.ObjectCreationExpression(Token(SyntaxKind.NewKeyword).AddTrialingSpaces(), type, argumentList, default);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ObjectCreationExpressionSyntax ObjectCreationExpression(TypeSyntax type) => SyntaxFactory.ObjectCreationExpression(Token(SyntaxKind.NewKeyword).AddTrialingSpaces(), type, default, default);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -800,6 +819,9 @@ namespace ReactiveMarbles.ObservableEvents.SourceGenerator
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ParameterSyntax Parameter(TypeSyntax type, string name) => Parameter(default, default, type.AddTrialingSpaces(), name, null);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ParameterSyntax Parameter(TypeSyntax type, string name, IReadOnlyCollection<SyntaxKind> modifier) => Parameter(default, modifier, type.AddTrialingSpaces(), name, null);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ParameterSyntax Parameter(IReadOnlyCollection<AttributeListSyntax>? attributes, IReadOnlyCollection<SyntaxKind>? modifiers, TypeSyntax? type, string identifier, EqualsValueClauseSyntax? equals)
