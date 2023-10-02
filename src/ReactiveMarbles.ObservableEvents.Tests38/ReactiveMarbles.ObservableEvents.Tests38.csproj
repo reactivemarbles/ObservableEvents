@@ -5,9 +5,11 @@
     <IsPackable>false</IsPackable>
     <NoWarn>$(NoWarn);SA1600</NoWarn>
     <RootNamespace>ReactiveMarbles.ObservableEvents.Tests</RootNamespace>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="3.8.0" PrivateAssets="all" />
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" PrivateAssets="all" />
   </ItemGroup>
 
@@ -16,19 +18,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="GeneratorLibraryTests40.cs" />
+    <Compile Include="..\ReactiveMarbles.ObservableEvents.TestsInternal\**\*.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="GeneratorLibraryTestsBase.TestCases.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>GeneratorLibraryTestsBase.TestCases.cs</LastGenOutput>
-    </None>
-    <None Update="GeneratorLibraryTestsBase.TestCases.txt">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>GeneratorLibraryTestsBase.TestCases.tt</DependentUpon>
-    </None>
+    <None Include="..\ReactiveMarbles.ObservableEvents.TestsInternal\**\*.tt" />
   </ItemGroup>
 
   <ItemGroup>
@@ -36,11 +30,17 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="GeneratorLibraryTestsBase.TestCases.cs">
+    <Compile Update="..\ReactiveMarbles.ObservableEvents.TestsInternal\GeneratorLibraryTestsBase.TestCases.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>GeneratorLibraryTestsBase.TestCases.tt</DependentUpon>
     </Compile>
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="..\ReactiveMarbles.ObservableEvents.TestsInternal\GeneratorLibraryTestsBase.TestCases.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>GeneratorLibraryTestsBase.TestCases.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
 </Project>

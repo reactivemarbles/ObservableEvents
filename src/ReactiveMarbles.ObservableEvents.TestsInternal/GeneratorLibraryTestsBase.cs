@@ -2,6 +2,10 @@
 // ReactiveUI Association Incorporated licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Collections.Concurrent;
+
+#pragma warning disable CS0618 // Type or member is obsolete
+
 namespace ReactiveMarbles.ObservableEvents.Tests;
 
 /// <summary>
@@ -9,10 +13,23 @@ namespace ReactiveMarbles.ObservableEvents.Tests;
 /// </summary>
 public abstract partial class GeneratorLibraryTestsBase
 {
+    private static LibraryRange _rxLibrary = new LibraryRange("System.Reactive", VersionRange.AllStableFloating, LibraryDependencyTarget.Package);
+
+    private static ConcurrentDictionary<(string TargetFramework, LibraryRange Library), Task<InputAssembliesGroup>> _inputAssemblies = new();
+
     /// <summary>
     /// Gets or sets the test context.
     /// </summary>
     public TestContext? TestContext { get; set; }
+
+    /// <summary>
+    /// Loads the resources.
+    /// </summary>
+    [AssemblyInitialize]
+    public void LoadResources()
+    {
+        _inputAssemblies.Clear();
+    }
 
     /// <summary>
     /// Creates the generator for testing.
@@ -24,26 +41,34 @@ public abstract partial class GeneratorLibraryTestsBase
     {
         var targetFrameworks = targetFramework.ToFrameworks();
 
-#pragma warning disable CS0618 // Type or member is obsolete
         var library = new LibraryRange(nugetPackageName, VersionRange.AllStableFloating, LibraryDependencyTarget.Package);
-#pragma warning restore CS0618 // Type or member is obsolete
-        var inputGroup = await NuGetPackageHelper.DownloadPackageFilesAndFolder(library, targetFrameworks, packageOutputDirectory: null).ConfigureAwait(false);
+
+        var inputGroup = await GetInputAssembly(library, targetFrameworks).ConfigureAwait(false);
 
         await RunTests(inputGroup, targetFrameworks, action).ConfigureAwait(false);
     }
 
     private static async Task RunTests(InputAssembliesGroup inputGroup, IReadOnlyList<NuGetFramework> targetFrameworks, Action<EventBuilderCompiler> action)
     {
-#pragma warning disable CS0618 // Type or member is obsolete
-        var rxLibrary = new LibraryRange("System.Reactive", VersionRange.AllStableFloating, LibraryDependencyTarget.Package);
-#pragma warning restore CS0618 // Type or member is obsolete
-
-        var rxui = await NuGetPackageHelper.DownloadPackageFilesAndFolder(rxLibrary, targetFrameworks, packageOutputDirectory: null).ConfigureAwait(false);
+        var rxui = await GetInputAssembly(_rxLibrary, targetFrameworks);
 
         var framework = targetFrameworks[0];
         var compilation = new EventBuilderCompiler(inputGroup, rxui, framework);
 
         action(compilation);
+    }
+
+    private static Task<InputAssembliesGroup> GetInputAssembly(LibraryRange library, IReadOnlyList<NuGetFramework> targetFrameworks)
+    {
+        if (targetFrameworks.Count == 0)
+        {
+            throw new InvalidOperationException("Must have a valid target framework");
+        }
+
+        var initialFramework = targetFrameworks[0].ToString();
+
+        return _inputAssemblies.GetOrAdd((initialFramework, library), async _ =>
+            await NuGetPackageHelper.DownloadPackageFilesAndFolder(library, targetFrameworks, packageOutputDirectory: null).ConfigureAwait(false));
     }
 
     private static List<ITypeDefinition> GetValidTypes(ICompilation compilation, bool allowSealed)
@@ -250,10 +275,16 @@ namespace ReactiveMarbles.ObservableEvents.Tests
             sourceGeneratorUtility.RunGeneratorInstance(
                 compilation,
                 generator,
-                out _,
-                out _,
-                out _,
+                out var compilationDiagnostics,
+                out var generatorDiagnostics,
+                out var generatorDriver,
                 source);
+
+            var warningErrors = compilationDiagnostics.Where(x => x.Severity >= Microsoft.CodeAnalysis.DiagnosticSeverity.Warning).ToList();
+            if (warningErrors.Count > 0)
+            {
+                TestContext?.WriteLine("Failed on: " + string.Join("\r\n", warningErrors.Select(x => x.ToString())));
+            }
         }
     }
 }

@@ -6,6 +6,7 @@
     <RootNamespace>ReactiveMarbles.ObservableEvents.SourceGenerator</RootNamespace>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <AssemblyName>ReactiveMarbles.ObservableEvents.SourceGenerator</AssemblyName>
+    <NoWarn>$(NoWarn);NU1605</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
