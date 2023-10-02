@@ -3,10 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31612.314
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReactiveMarbles.ObservableEvents.Example", "ReactiveMarbles.ObservableEvents.Example\ReactiveMarbles.ObservableEvents.Example.csproj", "{2AF6CBC6-6EE4-4C99-B769-2A777DE6ADFC}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReactiveMarbles.ObservableEvents.SourceGenerator", "ReactiveMarbles.ObservableEvents.SourceGenerator\ReactiveMarbles.ObservableEvents.SourceGenerator.csproj", "{611C5578-EBDB-4B10-81D1-E7CBEC52D8FB}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{BE609799-D47F-4A3B-9424-AFE67294D6C1}"
 	ProjectSection(SolutionItems) = preProject
 		..\.editorconfig = ..\.editorconfig
@@ -19,9 +15,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		..\version.json = ..\version.json
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TesterConsoleApp", "TesterConsoleApp\TesterConsoleApp.csproj", "{26A42A2C-668F-42E6-AC32-CBE740100F92}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReactiveMarbles.ObservableEvents.Example", "ReactiveMarbles.ObservableEvents.Example\ReactiveMarbles.ObservableEvents.Example.csproj", "{F59625C4-A2D4-4826-8748-1C633188FC4B}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReactiveMarbles.ObservableEvents.Tests", "ReactiveMarbles.ObservableEvents.Tests\ReactiveMarbles.ObservableEvents.Tests.csproj", "{F5EC30AD-DC77-4985-9649-E6C2FA97DD5A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReactiveMarbles.ObservableEvents.SourceGenerator", "ReactiveMarbles.ObservableEvents.SourceGenerator\ReactiveMarbles.ObservableEvents.SourceGenerator.csproj", "{54534C57-36F5-43C5-84AB-78F5B824D6DE}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReactiveMarbles.ObservableEvents.SourceGenerator38", "ReactiveMarbles.ObservableEvents.SourceGeneratorInternal38\ReactiveMarbles.ObservableEvents.SourceGenerator38.csproj", "{1E80BE33-BDC5-4EAA-9349-B85C470647C3}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReactiveMarbles.ObservableEvents.SourceGenerator40", "ReactiveMarbles.ObservableEvents.SourceGeneratorInternal40\ReactiveMarbles.ObservableEvents.SourceGenerator40.csproj", "{58D14AC0-D4FE-4E1B-B182-E0DBEAD29E15}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReactiveMarbles.ObservableEvents.Tests38", "ReactiveMarbles.ObservableEvents.Tests38\ReactiveMarbles.ObservableEvents.Tests38.csproj", "{BB20C70D-1F91-4228-8D9A-5F83C1A02875}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReactiveMarbles.ObservableEvents.Tests40", "ReactiveMarbles.ObservableEvents.Tests40\ReactiveMarbles.ObservableEvents.Tests40.csproj", "{0EF7B20B-CCC4-4DD4-8361-90E7BF485B27}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,27 +33,32 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{2AF6CBC6-6EE4-4C99-B769-2A777DE6ADFC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2AF6CBC6-6EE4-4C99-B769-2A777DE6ADFC}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2AF6CBC6-6EE4-4C99-B769-2A777DE6ADFC}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2AF6CBC6-6EE4-4C99-B769-2A777DE6ADFC}.Release|Any CPU.Build.0 = Release|Any CPU
-		{611C5578-EBDB-4B10-81D1-E7CBEC52D8FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{611C5578-EBDB-4B10-81D1-E7CBEC52D8FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{611C5578-EBDB-4B10-81D1-E7CBEC52D8FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{611C5578-EBDB-4B10-81D1-E7CBEC52D8FB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{26A42A2C-668F-42E6-AC32-CBE740100F92}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{26A42A2C-668F-42E6-AC32-CBE740100F92}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{26A42A2C-668F-42E6-AC32-CBE740100F92}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{26A42A2C-668F-42E6-AC32-CBE740100F92}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F5EC30AD-DC77-4985-9649-E6C2FA97DD5A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F5EC30AD-DC77-4985-9649-E6C2FA97DD5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F5EC30AD-DC77-4985-9649-E6C2FA97DD5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F5EC30AD-DC77-4985-9649-E6C2FA97DD5A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F59625C4-A2D4-4826-8748-1C633188FC4B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F59625C4-A2D4-4826-8748-1C633188FC4B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F59625C4-A2D4-4826-8748-1C633188FC4B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F59625C4-A2D4-4826-8748-1C633188FC4B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{54534C57-36F5-43C5-84AB-78F5B824D6DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{54534C57-36F5-43C5-84AB-78F5B824D6DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{54534C57-36F5-43C5-84AB-78F5B824D6DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{54534C57-36F5-43C5-84AB-78F5B824D6DE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1E80BE33-BDC5-4EAA-9349-B85C470647C3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1E80BE33-BDC5-4EAA-9349-B85C470647C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1E80BE33-BDC5-4EAA-9349-B85C470647C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1E80BE33-BDC5-4EAA-9349-B85C470647C3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{58D14AC0-D4FE-4E1B-B182-E0DBEAD29E15}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{58D14AC0-D4FE-4E1B-B182-E0DBEAD29E15}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{58D14AC0-D4FE-4E1B-B182-E0DBEAD29E15}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{58D14AC0-D4FE-4E1B-B182-E0DBEAD29E15}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BB20C70D-1F91-4228-8D9A-5F83C1A02875}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BB20C70D-1F91-4228-8D9A-5F83C1A02875}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BB20C70D-1F91-4228-8D9A-5F83C1A02875}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BB20C70D-1F91-4228-8D9A-5F83C1A02875}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0EF7B20B-CCC4-4DD4-8361-90E7BF485B27}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0EF7B20B-CCC4-4DD4-8361-90E7BF485B27}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0EF7B20B-CCC4-4DD4-8361-90E7BF485B27}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0EF7B20B-CCC4-4DD4-8361-90E7BF485B27}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {75F2884C-2610-41ED-84E3-191D764376EE}
 	EndGlobalSection
 EndGlobal
