@@ -1,0 +1,150 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+<#
+    string[] PlatformNames = new[]
+    {
+        "MonoAndroid50",
+        "MonoAndroid51",
+        "MonoAndroid60",
+        "MonoAndroid70",
+        "MonoAndroid71",
+        "MonoAndroid80",
+        "MonoAndroid81",
+        "MonoAndroid90",
+        "MonoAndroid10.0",
+        "MonoAndroid11.0",
+        "MonoTouch10",
+        "Xamarin.iOS10",
+        "Xamarin.Mac20",
+        "Xamarin.TVOS10",
+        "Xamarin.WATCHOS10",
+        "net7-android",
+        "net7-ios",
+        "net462",
+        "net48",
+        "net6.0",
+        "net7.0",
+    };
+
+    string[] NuGetPackageNames = new[]
+    {
+        "splat",
+        "Avalonia",
+        "Microsoft.Maui.Sdk",
+        "Xamarin.Forms",
+        "Xamarin.Essentials",
+        "FluentAssertions",
+        "Uno.UI",
+        "Prism.Forms",
+        "SkiaSharp",
+        "Shiny",
+        "Newtonsoft.Json",
+    };
+
+    string[] NuGetPackageFrameworks = new[]
+    {
+        "netstandard2.0",
+        "net6.0",
+        "net7.0",
+    };
+
+    var nuGetPackages = NuGetPackageNames.SelectMany(nuget => NuGetPackageFrameworks.Select(platform => (NuGet: nuget, Platform: platform)));
+
+#>
+// Copyright (c) 2019-2023 ReactiveUI Association Incorporated. All rights reserved.
+// ReactiveUI Association Incorporated licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+namespace ReactiveMarbles.ObservableEvents.Tests;
+
+/// <summary>Partial which contains the test cases.</summary>
+public abstract partial class GeneratorLibraryTestsBase
+{
+    /// <summary>
+    /// Tests all the derived instances.
+    /// </summary>
+    /// <param name="nugetPackageName">The NuGet package name.</param>
+    /// <param name="targetFramework">The target framework.</param>
+    /// <returns>A task to monitor the usage.</returns>
+    [TestMethod]
+<#
+    foreach (var nuGetPackage in nuGetPackages)
+    {
+#>
+    [DataRow("<#=nuGetPackage.NuGet#>", "<#=nuGetPackage.Platform#>")]
+<#
+    }
+#>
+    public Task TestDerived(string nugetPackageName, string targetFramework) => RunNuGetTests(nugetPackageName, targetFramework, DeriveEventsTest);
+
+    /// <summary>
+    /// Tests all the concrete classes.
+    /// </summary>
+    /// <param name="nugetPackageName">The NuGet package name.</param>
+    /// <param name="targetFramework">The target framework.</param>
+    /// <returns>A task to monitor the usage.</returns>
+    [TestMethod]
+<#
+    foreach (var nuGetPackage in nuGetPackages)
+    {
+#>
+    [DataRow("<#=nuGetPackage.NuGet#>", "<#=nuGetPackage.Platform#>")]
+<#
+    }
+#>
+    public Task TestConcrete(string nugetPackageName, string targetFramework) => RunNuGetTests(nugetPackageName, targetFramework, ConcreteClassCreate);
+
+    /// <summary>
+    /// Tests all the concrete platform.
+    /// </summary>
+    /// <param name="platform">The platform name.</param>
+    /// <returns>A task to monitor the usage.</returns>
+    [TestMethod]
+<#
+    foreach (var platform in PlatformNames)
+    {
+#>
+    [DataRow("<#=platform#>")]
+<#
+    }
+#>
+    public Task TestPlatformConcrete(string platform)
+    {
+        var input = new InputAssembliesGroup();
+
+        var frameworks = platform.ToFrameworks();
+        var framework = frameworks[0];
+        input.IncludeGroup.AddFiles(FileSystemHelpers.GetFilesWithinSubdirectories(framework.GetNuGetFrameworkFolders(), AssemblyHelpers.AssemblyFileExtensionsSet));
+
+        return RunTests(input, frameworks, ConcreteClassCreate);
+    }
+
+    /// <summary>
+    /// Tests all the derived platform.
+    /// </summary>
+    /// <param name="platform">The platform name.</param>
+    /// <returns>A task to monitor the usage.</returns>
+    [TestMethod]
+<#
+    foreach (var platform in PlatformNames)
+    {
+#>
+    [DataRow("<#=platform#>")]
+<#
+    }
+#>
+    public Task TestPlatformDerived(string platform)
+    {
+        var input = new InputAssembliesGroup();
+
+        var frameworks = platform.ToFrameworks();
+        var framework = frameworks[0];
+        input.IncludeGroup.AddFiles(FileSystemHelpers.GetFilesWithinSubdirectories(framework.GetNuGetFrameworkFolders(), AssemblyHelpers.AssemblyFileExtensionsSet));
+
+        return RunTests(input, frameworks, DeriveEventsTest);
+    }
+}
