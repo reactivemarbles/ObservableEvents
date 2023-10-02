@@ -6,6 +6,7 @@
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <IsRoslynComponent>true</IsRoslynComponent>
+    <NoWarn>$(NoWarn);NU5128;NU5128</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
