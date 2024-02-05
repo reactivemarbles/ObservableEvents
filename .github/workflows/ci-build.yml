@@ -61,7 +61,7 @@ jobs:
       working-directory: src
 
     - name: Upload Code Coverage
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       
     - name: Create NuGet Artifacts
       uses: actions/upload-artifact@master
