@@ -45,8 +45,8 @@
 
   <ItemGroup Condition="$(IsTestProject)">
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
-    <PackageReference Include="MSTest.TestAdapter" Version="3.2.1" />
-    <PackageReference Include="MSTest.TestFramework" Version="3.2.1" />
+    <PackageReference Include="MSTest.TestAdapter" Version="3.2.2" />
+    <PackageReference Include="MSTest.TestFramework" Version="3.2.2" />
     <PackageReference Include="coverlet.collector" Version="6.0.1" />
     <PackageReference Include="ReactiveMarbles.NuGet.Helpers" Version="1.1.1" />
     <PackageReference Include="ICSharpCode.Decompiler" Version="8.2.0.7535" />
