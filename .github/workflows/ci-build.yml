@@ -23,7 +23,7 @@ jobs:
         lfs: true
 
     - name: Install .NET 6
-      uses: actions/setup-dotnet@v4.0.0
+      uses: actions/setup-dotnet@v4.0.1
       with:
         dotnet-version: 6.0.x
 
