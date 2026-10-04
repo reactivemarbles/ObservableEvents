@@ -1,3 +1,6 @@
+> [!WARNING]
+> This repository is deprecated and archived. We have now moved these works into the mainstream ReactiveUI repository [reactiveui/Primitives](https://github.com/reactiveui/Primitives). The replacement package is [ReactiveUI.Primitives.ObservableEvents](https://www.nuget.org/packages/ReactiveUI.Primitives.ObservableEvents)
+
 <a href="https://github.com/reactivemarbles/observableevents">
     <img width="150" src="./images/logo.png"/>
 </a>
